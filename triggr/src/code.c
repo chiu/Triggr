@@ -24,6 +24,7 @@ int count=0;
 int workType;
 
 struct ev_loop *lp;
+struct ev_async idleAgain;
 
 pthread_cond_t idleC=PTHREAD_COND_INITIALIZER;
 pthread_mutex_t idleM=PTHREAD_MUTEX_INITIALIZER;
@@ -42,6 +43,10 @@ void fireTask(){
  pthread_mutex_unlock(&idleM); 
 }
 
+static void cbIdleAgain(struct ev_loop *loop,ev_async *this,int revent){
+ Rprintf("\t\tInformed that job is done\n");
+}
+
 static void cbTimer(struct ev_loop *loop,ev_timer *this,int revents){
  Rprintf("\t\tNew request\n");
  fireTask();
@@ -50,7 +55,8 @@ static void cbTimer(struct ev_loop *loop,ev_timer *this,int revents){
 
 void* trigger(void *arg){
  lp=ev_loop_new(EVFLAG_AUTO);
-
+ ev_async_init(&idleAgain,cbIdleAgain);
+ ev_async_start(lp,&idleAgain);
  //Wait for the R part to go into idleLock
  pthread_mutex_lock(&idleM);
  pthread_mutex_unlock(&idleM); 
@@ -95,6 +101,7 @@ SEXP runPth(SEXP time){
   pthread_mutex_lock(&idleM);
   working=0;
   pthread_mutex_unlock(&idleM);
+  ev_async_send(lp,&idleAgain);
   Rprintf("Idle status restored...\n");
   //Call the thread that the work is done
  }
