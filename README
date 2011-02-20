@@ -1,0 +1,6 @@
+Triggr is (intended to be) an R package that transforms the regular session into a *worker mode*, so that it could realise job requests coming through a socket from other apps and stay opened the whole time (something like fastCGI, but with own, lightweight and low level protocol). Opposite to Rserve, it will process arbitrary text messages instead of blindly executing all the incoming data.
+
+Triggr is (intended) to control only one R process, delegating seeding/load-balancing/misbehaving-instance-collection to the master application. The control server (later called *trigger*) itself should be responsive all the time, regardless if the worker is busy or not -- this is going to be achieved by forking it into a pthread thread and and making it a non-blocking solution.
+
+
+This software is still in a very early development, so nothing is documented, almost nothing works and anything can change. Stay tuned!
