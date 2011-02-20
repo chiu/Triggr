@@ -38,6 +38,7 @@ struct Connection{
  char *ans;
  size_t qLen;
  size_t aLen;
+ size_t aLenDone;
  int conType;
  enum connectionStatus status;
 }; 
@@ -135,6 +136,12 @@ static void cbRead(struct ev_loop *lp,ev_io *this,int revents){
   }
   if(connection->conType==QS_ANS_WRITE){
    //Start write callback
+   connection->aLenDone=0;
+   ev_io_init(&connection->aWatcher,cbWrite,this->fd,EV_WRITE);
+   connection->aWatcher.data=(void*)connection;
+   ev_io_start(lp,&connection->qWatcher); 
+   //And stop this one
+   ev_io_stop(lp,this);
   }
   if(connection->conType==QS_BROKEN){
    ev_io_stop(lp,this);
@@ -152,7 +159,22 @@ static void cbRead(struct ev_loop *lp,ev_io *this,int revents){
 }
 
 static void cbWrite(struct ev_loop *lp,ev_io *this,int revents){
-
+ struct Connection *connection;
+ connection=(struct connection*)this->data;
+ 
+ int written;
+ written=write(this->fd,ans+aLenDone,aLen-aLenDone);
+ if(written<0){
+  //!WOULDBLOCK -> kill
+ }
+ aLenDone+=written;
+ if(aLenDone==aLen){
+  //Done!
+  ev_io_stop(lp,this);
+  close(this->fd);
+  freec(connection);
+ }
+ //More data to read
 }
 
 static void cbAccept(struct ev_loop *lp,ev_io *this,int revents){
