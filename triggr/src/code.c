@@ -83,6 +83,13 @@ int readNum(int fd){
  return(ans);
 }
 
+//Connection destructor
+void freec(struct connection* c){
+ if(c->query!=NULL) free(c->query);
+ if(c->ans!=NULL) free(c->ans);
+ free(c);
+}
+
 static void cbRead(struct ev_loop *lp,ev_io *this,int revents){
  struct Connection *connection;
  connection=(struct connection*)this->data;
@@ -96,7 +103,7 @@ static void cbRead(struct ev_loop *lp,ev_io *this,int revents){
   if(Q!=8 || strncomp(hand,vhand,7) || 65>hand[7] || 69<hand[7]){
    //Bad connection
    ev_io_stop(lp,this);
-   free(connection);
+   freec(connection);
    close(this->fd);
   }
   //We have a valid query; now time to identify it and perform action
@@ -131,8 +138,8 @@ static void cbRead(struct ev_loop *lp,ev_io *this,int revents){
   }
   if(connection->conType==QS_BROKEN){
    ev_io_stop(lp,this);
-   free(connection);
    close(this->fd);
+   freec(connection);
   }
   //Else, we just go and continue with reading
  }
@@ -157,6 +164,9 @@ static void cbAccept(struct ev_loop *lp,ev_io *this,int revents){
  fcntl(conFd,F_SETFL,fcntl(conFd,F_GETFL,0)|O_NONBLOCK);
  
  struct Connection *connection; connection=malloc(sizeof(connection));
+ //Otherwise there will be memory problems
+ connection->ans=NULL;
+ connection->query=NULL;
  connction->status=QS_FRESH;
  //So we have client accepted; let's hear what it wants to tell us
  ev_io_init(&connection->qWatcher,cbRead,conFd,EV_READ);
