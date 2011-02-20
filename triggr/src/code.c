@@ -19,8 +19,11 @@ int active=1;
 
 int count=0;
 
+int acceptFd;
+
 #define WORK_DUMMY 1
 #define WORK_TRUE 2
+
 int workType;
 
 struct ev_loop *lp;
@@ -73,7 +76,7 @@ void* trigger(void *arg){
  return(NULL);
 }
 
-SEXP runPth(SEXP time){
+SEXP runPth(SEXP port){
  R_CStackLimit=(uintptr_t)-1;
  active=1; count=0;
  Rprintf("Initiating...\n");
@@ -83,7 +86,26 @@ SEXP runPth(SEXP time){
  Rprintf("Locking the idleLock for init...\n");
  pthread_mutex_lock(&idleM); //Hold the server from true staring 
  rc=pthread_create(&thread,NULL,trigger,NULL);
+ Rprintf("Connection socket\n");
+ //Initiate network interface
+ int acceptFd;
+ if((acceptFd=socket(AF_INET,SOCK_STREAM,0))<0) error("Cannot open listening socket!");
+ 
+ struct sockaddr_in serverAddr;
+ bzero((char*)&serverAddr,sizeof(serverAddr));
+ serverAddr.sin_family=AF_INET;
+ serverAddr.sin_addr.s_addr=INADDR_ANY; //Bind to localhost
+ serverAddr.sin_port=htons(INTEGER(port)[0]);
+
+ if(bind(acceptFd,(struct sockaddr*)&serverAddr,sizeof(serverAddr))<0) error("Cannot bind server!");
+
+ //Starting listening for clients
+ if(listen(acceptFd,MAX_CLIENTS)<0) error("Cannot listen with server!");
+ Rprintf("Listening now...\n");
+ //Libev will be binded to this interface in the trigger thread
+ 
  Rprintf("Init simulation START\n");
+ 
  usleep(2000000);//Simulate initialisation
  Rprintf("Init simulation STOP\n");
  for(processedJobs=0;active;processedJobs++){
