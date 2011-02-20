@@ -69,17 +69,125 @@ static void cbTimer(struct ev_loop *loop,ev_timer *this,int revents){
  if(count==20) ev_break(loop,EVBREAK_ALL);
 }
 
+int readNum(int fd){
+ int ans=0;
+ char c;
+ c='0';
+ int cnt;
+ while(c!=' '){
+  ans*=10;
+  ans+=c-'0';
+  cnt=read(fd,&c,1);
+  if(cnt!=1 || c<'0' || c>'9') return(-1);
+ }
+ return(ans);
+}
+
+static void cbRead(struct ev_loop *lp,ev_io *this,int revents){
+ struct Connection *connection;
+ connection=(struct connection*)this->data;
+ 
+ if(connection->status==QS_FRESH){
+  char hand[8];
+  char vhand[]="triggr ";//plus one char for query
+
+  int Q;
+  Q=read(this->fd,&hand,8);         //hand[7] is one of A-E; Acquire status, Begin job, Cancel job, get Details, Exit worker
+  if(Q!=8 || strncomp(hand,vhand,7) || 65>hand[7] || 69<hand[7]){
+   //Bad connection
+   ev_io_stop(lp,this);
+   free(connection);
+   close(this->fd);
+  }
+  //We have a valid query; now time to identify it and perform action
+  switch(hand[7]){
+   case 'A':
+    connection->aLen=1;
+    connection->ans=malloc(1);
+    if(working) ans='W'; else ans='I';
+    ev_io_stop(lp,this);
+    connection->conType=QS_ANS_WRITE;
+    break;
+   case 'B':
+    connection->qLen=readNum(this->fd);
+    if(connection->qLen<1 || connection->qLen>MAX_QSIZE){
+     connection->conType=QS_BROKEN;
+     break;  
+    } 
+    connection->conType=QS_QUERY_READ;    
+    break;
+   case 'C':
+    //TODO: Write real handler
+    connection->conType=QS_BROKEN;
+    break;
+   case 'D':
+    connection->conType=QS_BROKEN;
+    break;
+   case 'E':
+    exit(0);
+  }
+  if(connection->conType==QS_ANS_WRITE){
+   //Start write callback
+  }
+  if(connection->conType==QS_BROKEN){
+   ev_io_stop(lp,this);
+   free(connection);
+   close(this->fd);
+  }
+  //Else, we just go and continue with reading
+ }
+ 
+ if(connection->status==QS_QUERY_READ){
+  //TODO: Implement
+ }
+ 
+ 
+}
+
+static void cbWrite(struct ev_loop *lp,ev_io *this,int revents){
+
+}
+
+static void cbAccept(struct ev_loop *lp,ev_io *this,int revents){
+ struct sockaddr_in clientAddr;
+ socklen_t cliLen=sizeof(clientAddr);
+ int conFd;
+ conFd=accept(w->fd,(struct sockaddr*)&(query->clientAddr),&cliLen);
+ if(conFd<0) return;
+ fcntl(conFd,F_SETFL,fcntl(conFd,F_GETFL,0)|O_NONBLOCK);
+ 
+ struct Connection *connection; connection=malloc(sizeof(connection));
+ connction->status=QS_FRESH;
+ //So we have client accepted; let's hear what it wants to tell us
+ ev_io_init(&connection->qWatcher,cbRead,conFd,EV_READ);
+ connection->qWatcher.data=(void*)connection;
+ ev_io_start(lp,&connection->qWatcher); 
+} 
+
+
+void Err(char *x){
+
+}
+
 void* trigger(void *arg){
  lp=ev_loop_new(EVFLAG_AUTO);
  ev_async_init(&idleAgain,cbIdleAgain);
  ev_async_start(lp,&idleAgain);
+ 
  //Wait for the R part to go into idleLock
  pthread_mutex_lock(&idleM);
  pthread_mutex_unlock(&idleM); 
  
- ev_timer timer;
- ev_timer_init(&timer,cbTimer,3.,1.);
- ev_timer_start(lp,&timer);
+ 
+ //Installing accept watcher
+ ev_io acceptWatcher;
+ ev_io_init(&acceptWatcher,cbAccept,acceptFd,EV_READ);
+ ev_io_start(lp,&acceptWatcher);
+ 
+ 
+ //ev_timer timer;
+ //ev_timer_init(&timer,cbTimer,3.,1.);
+ //ev_timer_start(lp,&timer);
  
  //Run loop
  ev_run(lp,0);
