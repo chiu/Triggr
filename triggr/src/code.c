@@ -11,8 +11,8 @@
 #define CSTACK_DEFNS 7
 #include <Rinterface.h>
 
-
-
+#define MAX_CLIENTS 3
+#define MAX_QSIZE 1024
 
 int working=0;
 int active=1;
