@@ -29,6 +29,19 @@ int workType;
 struct ev_loop *lp;
 struct ev_async idleAgain;
 
+enum connectionStatus={QS_FRESH,QS_QUERY_READ,QS_ANS_WRITE,QS_BROKEN};
+
+struct Connection{
+ char *query;
+ struct ev_io qWatch;
+ struct ev_io aWatch;
+ char *ans;
+ size_t qLen;
+ size_t aLen;
+ int conType;
+ enum connectionStatus status;
+}; 
+
 pthread_cond_t idleC=PTHREAD_COND_INITIALIZER;
 pthread_mutex_t idleM=PTHREAD_MUTEX_INITIALIZER;
 
