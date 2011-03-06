@@ -29,7 +29,7 @@ int workType;
 struct ev_loop *lp;
 struct ev_async idleAgain;
 
-enum connectionStatus={QS_FRESH,QS_QUERY_READ,QS_ANS_WRITE,QS_BROKEN};
+enum connectionStatus {QS_FRESH,QS_QUERY_READ,QS_ANS_WRITE,QS_BROKEN};
 
 struct Connection{
  char *query;
@@ -112,7 +112,7 @@ static void cbRead(struct ev_loop *lp,ev_io *this,int revents){
    case 'A':
     connection->aLen=1;
     connection->ans=malloc(1);
-    if(working) ans='W'; else ans='I';
+    if(working) ans[0]='W'; else ans[0]='I';
     ev_io_stop(lp,this);
     connection->conType=QS_ANS_WRITE;
     break;
@@ -153,6 +153,7 @@ static void cbRead(struct ev_loop *lp,ev_io *this,int revents){
  
  if(connection->status==QS_QUERY_READ){
   //TODO: Implement
+
  }
  
  
@@ -165,7 +166,9 @@ static void cbWrite(struct ev_loop *lp,ev_io *this,int revents){
  int written;
  written=write(this->fd,ans+aLenDone,aLen-aLenDone);
  if(written<0){
-  //!WOULDBLOCK -> kill
+  if(errno!=EWOULDBLOCK){
+   
+  }
  }
  aLenDone+=written;
  if(aLenDone==aLen){
@@ -184,6 +187,7 @@ static void cbAccept(struct ev_loop *lp,ev_io *this,int revents){
  conFd=accept(w->fd,(struct sockaddr*)&(query->clientAddr),&cliLen);
  if(conFd<0) return;
  fcntl(conFd,F_SETFL,fcntl(conFd,F_GETFL,0)|O_NONBLOCK);
+  
  
  struct Connection *connection; connection=malloc(sizeof(connection));
  //Otherwise there will be memory problems
