@@ -29,20 +29,6 @@ int workType;
 struct ev_loop *lp;
 struct ev_async idleAgain;
 
-enum connectionStatus {QS_FRESH,QS_QUERY_READ,QS_ANS_WRITE,QS_BROKEN};
-
-struct Connection{
- char *query;
- struct ev_io qWatch;
- struct ev_io aWatch;
- char *ans;
- size_t qLen;
- size_t aLen;
- size_t aLenDone;
- int conType;
- enum connectionStatus status;
-}; 
-
 pthread_cond_t idleC=PTHREAD_COND_INITIALIZER;
 pthread_mutex_t idleM=PTHREAD_MUTEX_INITIALIZER;
 
@@ -64,146 +50,8 @@ static void cbIdleAgain(struct ev_loop *loop,ev_async *this,int revent){
  Rprintf("\t\tInformed that job is done\n");
 }
 
-static void cbTimer(struct ev_loop *loop,ev_timer *this,int revents){
- Rprintf("\t\tNew request\n");
- fireTask();
- if(count==20) ev_break(loop,EVBREAK_ALL);
-}
-
-int readNum(int fd){
- int ans=0;
- char c;
- c='0';
- int cnt;
- while(c!=' '){
-  ans*=10;
-  ans+=c-'0';
-  cnt=read(fd,&c,1);
-  if(cnt!=1 || c<'0' || c>'9') return(-1);
- }
- return(ans);
-}
-
-//Connection destructor
-void freec(struct connection* c){
- if(c->query!=NULL) free(c->query);
- if(c->ans!=NULL) free(c->ans);
- free(c);
-}
-
-static void cbRead(struct ev_loop *lp,ev_io *this,int revents){
- struct Connection *connection;
- connection=(struct connection*)this->data;
- 
- if(connection->status==QS_FRESH){
-  char hand[8];
-  char vhand[]="triggr ";//plus one char for query
-
-  int Q;
-  Q=read(this->fd,&hand,8);         //hand[7] is one of A-E; Acquire status, Begin job, Cancel job, get Details, Exit worker
-  if(Q!=8 || strncomp(hand,vhand,7) || 65>hand[7] || 69<hand[7]){
-   //Bad connection
-   ev_io_stop(lp,this);
-   freec(connection);
-   close(this->fd);
-  }
-  //We have a valid query; now time to identify it and perform action
-  switch(hand[7]){
-   case 'A':
-    connection->aLen=1;
-    connection->ans=malloc(1);
-    if(working) ans[0]='W'; else ans[0]='I';
-    ev_io_stop(lp,this);
-    connection->conType=QS_ANS_WRITE;
-    break;
-   case 'B':
-    connection->qLen=readNum(this->fd);
-    if(connection->qLen<1 || connection->qLen>MAX_QSIZE){
-     connection->conType=QS_BROKEN;
-     break;  
-    } 
-    connection->conType=QS_QUERY_READ;    
-    break;
-   case 'C':
-    //TODO: Write real handler
-    connection->conType=QS_BROKEN;
-    break;
-   case 'D':
-    connection->conType=QS_BROKEN;
-    break;
-   case 'E':
-    exit(0);
-  }
-  if(connection->conType==QS_ANS_WRITE){
-   //Start write callback
-   connection->aLenDone=0;
-   ev_io_init(&connection->aWatcher,cbWrite,this->fd,EV_WRITE);
-   connection->aWatcher.data=(void*)connection;
-   ev_io_start(lp,&connection->qWatcher); 
-   //And stop this one
-   ev_io_stop(lp,this);
-  }
-  if(connection->conType==QS_BROKEN){
-   ev_io_stop(lp,this);
-   close(this->fd);
-   freec(connection);
-  }
-  //Else, we just go and continue with reading
- }
- 
- if(connection->status==QS_QUERY_READ){
-  //TODO: Implement
-
- }
- 
- 
-}
-
-static void cbWrite(struct ev_loop *lp,ev_io *this,int revents){
- struct Connection *connection;
- connection=(struct connection*)this->data;
- 
- int written;
- written=write(this->fd,ans+aLenDone,aLen-aLenDone);
- if(written<0){
-  if(errno!=EWOULDBLOCK){
-   
-  }
- }
- aLenDone+=written;
- if(aLenDone==aLen){
-  //Done!
-  ev_io_stop(lp,this);
-  close(this->fd);
-  freec(connection);
- }
- //More data to read
-}
-
-static void cbAccept(struct ev_loop *lp,ev_io *this,int revents){
- struct sockaddr_in clientAddr;
- socklen_t cliLen=sizeof(clientAddr);
- int conFd;
- conFd=accept(w->fd,(struct sockaddr*)&(query->clientAddr),&cliLen);
- if(conFd<0) return;
- fcntl(conFd,F_SETFL,fcntl(conFd,F_GETFL,0)|O_NONBLOCK);
-  
- 
- struct Connection *connection; connection=malloc(sizeof(connection));
- //Otherwise there will be memory problems
- connection->ans=NULL;
- connection->query=NULL;
- connction->status=QS_FRESH;
- //So we have client accepted; let's hear what it wants to tell us
- ev_io_init(&connection->qWatcher,cbRead,conFd,EV_READ);
- connection->qWatcher.data=(void*)connection;
- ev_io_start(lp,&connection->qWatcher); 
-} 
 
 
-void Err(char *x){
-
-}
 
 void* trigger(void *arg){
  lp=ev_loop_new(EVFLAG_AUTO);
@@ -219,11 +67,6 @@ void* trigger(void *arg){
  ev_io acceptWatcher;
  ev_io_init(&acceptWatcher,cbAccept,acceptFd,EV_READ);
  ev_io_start(lp,&acceptWatcher);
- 
- 
- //ev_timer timer;
- //ev_timer_init(&timer,cbTimer,3.,1.);
- //ev_timer_start(lp,&timer);
  
  //Run loop
  ev_run(lp,0);
