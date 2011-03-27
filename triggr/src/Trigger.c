@@ -1,5 +1,5 @@
 
-
+/*
 void fireTask(){
  pthread_mutex_lock(&idleM);
  if(working){
@@ -12,11 +12,17 @@ void fireTask(){
   pthread_cond_signal(&idleC);
  }
  pthread_mutex_unlock(&idleM); 
-}
+}*/
 
-static void cbIdleAgain(struct ev_loop *loop,ev_async *this,int revent){
+/*static void cbIdleAgain(struct ev_loop *loop,ev_async *this,int revent){
  Rprintf("\t\t\tInformed that job is done\n");
-}
+ if(!GlobalQueue.headWork->done){
+  printf("Very serious panic... but will continue...");
+ }
+ Connection* doneConnection=GlobalQueue.headWork->c;
+ //TODO: Make out buffer with lastResult
+ 
+}*/
 
 static void onTim(struct ev_loop *lp,ev_timer *this,int revents){
  Rprintf("\t\tXXXXXX\n");
@@ -25,8 +31,8 @@ static void onTim(struct ev_loop *lp,ev_timer *this,int revents){
 void* trigger(void *arg){
  Rprintf("_A1\n");
  lp=ev_loop_new(EVFLAG_AUTO);
- ev_async_init(&idleAgain,cbIdleAgain);
- ev_async_start(lp,&idleAgain);
+ //ev_async_init(&idleAgain,cbIdleAgain);
+ //ev_async_start(lp,&idleAgain);
  Rprintf("_A2\n");
  //Wait for the R part to go into idleLock
  pthread_mutex_lock(&idleM);

@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <sys/socket.h> 
 #include <linux/in.h>
-#include <sys/stat.h>
+#include <sys/stat.h> 
 #include <fcntl.h>  
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,11 +17,11 @@
 #include "ev.c"
 
 #define HAVE_UINTPTR_T 7
-#define CSTACK_DEFNS 7
+#define CSTACK_DEFNS 7  
 #include <Rinterface.h>
-
+  
 #define MAX_CLIENTS 3
-#define MAX_QSIZE 1024
+#define MAX_QSIZE 1024 
 
 #include "defs.h"
 
@@ -36,9 +36,11 @@
 //Trigger thread
 #include "Trigger.c"
 
+char *lastResult;
+
 void makeGlobalQueue(){
  pthread_mutex_lock(&gqM);
- GlobalQueue.tailWork=
+ GlobalQueue.tailWork=NULL;
  GlobalQueue.headWork=NULL;
  GlobalQueue.curCon=0;
  pthread_mutex_unlock(&gqM);
@@ -80,24 +82,62 @@ SEXP startTrigger(SEXP port){
  usleep(2000000);//Simulate initialisation
  Rprintf("Init simulation STOP\n");
  for(processedJobs=0;active;processedJobs++){
-  Rprintf("Starting wait\n");
-  //We musn't lock the mutex if it was already locked in init
+  Rprintf("Starting wait\n"); 
+  //We musn't lock the mutex if it was already locked in init 
   if(processedJobs>0) pthread_mutex_lock(&idleM);
   pthread_cond_wait(&idleC,&idleM);
   Rprintf("Lock de-locked\n");
-  working=1;
-  pthread_mutex_unlock(&idleM);
+  pthread_mutex_unlock(&idleM); 
+  
+  Rprintf("PP-gqM mutex locked\n");
+  pthread_mutex_lock(&gqM);
+  while(GlobalQueue.headWork!=NULL){
+   working=1;
+   GlobalQueue.headWork->working=1;
+   Connection *c=GlobalQueue.headWork->c;
+   //TODO: Copy headWork's string into currentRequest
+   char *currentRequest;
+   pthread_mutex_unlock(&gqM);
+   Rprintf("PP-gqM mutex unlocked\n");
 
-  Rprintf("Doing work...\n");
+   Rprintf("PP-Doing work...\n");
+   //Dummy work  
+   usleep(1500000); 
+   Rprintf("PP-Work done\n"); 
+   
+   
+   char *currentResponse=malloc(20);//TODO: Change to R_EVAL(currentRequest);...
+   currentResponse="CusCus\r\n\r\n\0";//TODO: ...along with the removal of this
+  
+   Rprintf("PP-gqM mutex locked\n");
+   pthread_mutex_lock(&gqM);
+   working=0;
+   //Remove the work current work buffer
+   GlobalQueue.headWork->working=0;
+   printf("Killing headWork=%d...\n",GlobalQueue.headWork);
+   killWorkBuffer(GlobalQueue.headWork);
+   printf("New headWork is %d...\n",GlobalQueue.headWork);
+   //Put the output on the write queue of the connection
+   puts("Making new OB...");
+   OutBuffer *ob;
+   ob=makeOutputBuffer(currentResponse,c);
+   printf("New OB is %d\n",ob);
+   //free(currentResponse);TODO: Resolve it
+  }
+  pthread_mutex_unlock(&gqM);
+  Rprintf("PP-gqM mutex unlocked\n");
+  
+  /*Rprintf("Doing work...\n");
   //Dummy work 
   usleep(1500000);
   Rprintf("Done...\n");
   pthread_mutex_lock(&idleM);
   working=0;
+  lastResult=malloc(10);
+  lastResult="CusCus\n";
   pthread_mutex_unlock(&idleM);
-  ev_async_send(lp,&idleAgain);
+  ev_async_send(lp,&idleAgain);*/
   Rprintf("Idle status restored...\n");
-  //Call the thread that the work is done
  }
  Rprintf("Detected that the server should not be active any more =(\n Done jobs: %d\n",processedJobs);
 
