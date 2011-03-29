@@ -1,6 +1,5 @@
 
 void killOutputBuffer(OutBuffer *o){
- printf("Output buffer %d being killed\n",o);
  Connection *c=o->c;
  free(o->buffer);
  if(o==c->tailOut) c->tailOut=o->prv;
@@ -8,14 +7,12 @@ void killOutputBuffer(OutBuffer *o){
  if(o->prv!=NULL) o->prv->nxt=o->nxt;
  if(o->nxt!=NULL) o->nxt->prv=o->prv;
  free(o);
- printf("OB kill done.\n");
 }
 
 
 OutBuffer *makeOutputBuffer(const char *what,Connection *c){
  //gqM is locked outside this function
  if(!c->canWrite) tryResolveConnection(c);
- printf("Scheduling new output with %s\n",what);
  size_t size=strlen(what);
  OutBuffer* OB=malloc(sizeof(OutBuffer));
  if(OB){
@@ -35,8 +32,6 @@ OutBuffer *makeOutputBuffer(const char *what,Connection *c){
     OB->prv->nxt=OB;
     OB->nxt=NULL;
    }
-   puts("Restarting out watch...");
-   printf("Will transfer: '%s'\n",OB->buffer);
    OB->size=size;
    ev_io_start(lp,&c->aWatch);
    return(OB);

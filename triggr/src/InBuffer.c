@@ -68,16 +68,14 @@ void tillRNRN(int fd,InBuffer *b){
   if(readed<0){if(errno!=EWOULDBLOCK){
    //Error
    free(b->buffer);b->buffer=0;
-   /**/printf("Error while reading: %d=%s\n",errno,strerror(errno));
+   /**/Rprintf("Error %d while reading: %s\n",errno,strerror(errno));
    b->state=2;return;
   }else{
-   /**/printf("BLOCK!\n");
    return;
   }}
   if(readed==0){
    //EOF
    free(b->buffer);b->buffer=0;
-   printf("--fin!\n");
    b->state=3;return;
   }
  }

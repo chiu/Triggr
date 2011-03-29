@@ -21,10 +21,9 @@ void killWorkBuffer(WorkBuffer *w){
  if(working){
   //Buffer is now processed; this way we can only make it a ghost that will exist
   //to inform trigger to throw out the worked out result. 
-  puts("Work buffer becomes orphaned!");
+  Rprintf("Currently ongoing work was orphaned by client\n");
   w->orphaned=1;
  }else{
-  puts("Work buffer IS NOT orphaned, OK!");
   //It is not orphaned, remove from globalQueue
   if(w==GlobalQueue.tailWork) GlobalQueue.tailWork=w->globalPrv;
   if(w==GlobalQueue.headWork) GlobalQueue.headWork=w->globalNxt;

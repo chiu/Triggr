@@ -52,10 +52,7 @@ int count=0;
 
 int acceptFd;
 
-#define WORK_DUMMY 1
-#define WORK_TRUE 2
-
-int workType;
+int processedJobs;
 
 struct ev_loop *lp;
 struct ev_async idleAgain;
