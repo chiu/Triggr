@@ -60,9 +60,17 @@ int workType;
 struct ev_loop *lp;
 struct ev_async idleAgain;
 
+//Block the main thread during nothing-to-be-processed
 pthread_cond_t idleC=PTHREAD_COND_INITIALIZER;
 pthread_mutex_t idleM=PTHREAD_MUTEX_INITIALIZER;
+
+//Block the main thread until async event will not convert the result into OutBuffer
+pthread_cond_t outSchedC=PTHREAD_COND_INITIALIZER;
+pthread_mutex_t outSchedM=PTHREAD_MUTEX_INITIALIZER;
+
 pthread_mutex_t gqM=PTHREAD_MUTEX_INITIALIZER;
+
+Connection *lastDoneConnection;
 
 //Global state object
 struct{

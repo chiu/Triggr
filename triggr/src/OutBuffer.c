@@ -20,6 +20,8 @@ OutBuffer *makeOutputBuffer(const char *what,Connection *c){
  OutBuffer* OB=malloc(sizeof(OutBuffer));
  if(OB){
   OB->c=c;
+  OB->alrSent=0;
+  OB->streamming=0;
   OB->buffer=malloc(size+10);
   if(OB->buffer){
    strcpy(OB->buffer,what);
@@ -33,6 +35,9 @@ OutBuffer *makeOutputBuffer(const char *what,Connection *c){
     OB->prv->nxt=OB;
     OB->nxt=NULL;
    }
+   puts("Restarting out watch...");
+   printf("Will transfer: '%s'\n",OB->buffer);
+   OB->size=size;
    ev_io_start(lp,&c->aWatch);
    return(OB);
   }else{

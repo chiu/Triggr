@@ -159,16 +159,21 @@ static void cbRead(struct ev_loop *lp,struct ev_io *this,int revents){
 static void cbWrite(struct ev_loop *lp,ev_io *this,int revents){
  Connection* c;
  c=this->data;
- printf("W\n");
+ printf("W-a\n");
  if(c->headOut==NULL){
   //Queue is emty -- stop this watcher
+  printf("W-b\n");
   ev_io_stop(lp,this);
  }else{
   //Continue streaming outs
   OutBuffer* o;
+  printf("W-c\n");
   o=c->headOut;
+  printf("W-d\n");
   o->streamming=1;
+  printf("W-e, %s[%d-%d]\n",o->buffer,o->alrSent,o->size);
   int written=write(this->fd,o->buffer+o->alrSent,o->size-o->alrSent);
+  printf("W-f\n");
   if(written<0){
    if(errno!=EAGAIN){
     printf("Error while writing: %d=%s\n",errno,strerror(errno));
@@ -179,6 +184,7 @@ static void cbWrite(struct ev_loop *lp,ev_io *this,int revents){
     pthread_mutex_unlock(&gqM);
    }
   }else{
+   printf("W-X\n");
    o->alrSent+=written;
    if(o->alrSent==o->size){
     killOutputBuffer(o);
@@ -189,6 +195,7 @@ static void cbWrite(struct ev_loop *lp,ev_io *this,int revents){
    }
   }
  } 
+ printf("W-z\n");
 }
 
 static void cbAccept(struct ev_loop *lp,ev_io *this,int revents){
