@@ -1,23 +1,19 @@
 
 
 static void cbIdleAgain(struct ev_loop *loop,ev_async *this,int revent){
- char currentResponse[]="CusCus\r\n\r\n\0";
+ 
  pthread_mutex_lock(&gqM);
  
  //Put the output on the write queue of the connection
  OutBuffer *ob;
- ob=makeOutputBuffer(&currentResponse,lastDoneConnection); //This also starts writer watchers
+ ob=makeOutputBuffer(lastResult,lastDoneConnection);//This also starts writer watchers
+ free(lastResult);//Malloc'ed in code.c
  pthread_mutex_unlock(&gqM);
  
  //Allow new jobs to be processed
  pthread_mutex_lock(&outSchedM);
  pthread_cond_signal(&outSchedC);
  pthread_mutex_unlock(&outSchedM);
- 
- 
- //Connection* doneConnection=GlobalQueue.headWork->c;
- //TODO: Make out buffer with lastResult
- 
 }
 
 static void onTim(struct ev_loop *lp,ev_timer *this,int revents){

@@ -68,6 +68,7 @@ pthread_mutex_t outSchedM=PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t gqM=PTHREAD_MUTEX_INITIALIZER;
 
 Connection *lastDoneConnection;
+char *lastResult;
 
 //Global state object
 struct{

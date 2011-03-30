@@ -107,6 +107,9 @@ SEXP startTrigger(SEXP port){
    //Locking gqM to update the global state 
    pthread_mutex_lock(&gqM);
    lastDoneConnection=c;
+   char tmpResponse[]="CusCus\r\n\r\n";
+   lastResult=malloc(strlen(&tmpResponse)+1);
+   strcpy(lastResult,&tmpResponse);
    working=0;
    GlobalQueue.headWork->working=0;
    killWorkBuffer(GlobalQueue.headWork);
