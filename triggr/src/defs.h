@@ -69,6 +69,7 @@ pthread_mutex_t gqM=PTHREAD_MUTEX_INITIALIZER;
 
 Connection *lastDoneConnection;
 char *lastResult;
+int lastOrphaned;
 
 //Global state object
 struct{

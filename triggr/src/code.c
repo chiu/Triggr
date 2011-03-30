@@ -36,7 +36,7 @@
 //Trigger thread
 #include "Trigger.c"
 
-char *lastResult;
+
 
 void makeGlobalQueue(){
  pthread_mutex_lock(&gqM);
@@ -46,18 +46,22 @@ void makeGlobalQueue(){
  pthread_mutex_unlock(&gqM);
 }
 
+void sigpipeHandler(int sig){
+ //Do very nothing
+}
+
 //Function running the trigger
 SEXP startTrigger(SEXP port){
  R_CStackLimit=(uintptr_t)-1;
  active=1; count=0;
  port=INTEGER(port)[0];
- makeGlobalQueue();
+ makeGlobalQueue(); 
  Rprintf("Initiating TriggR...\n"); 
  pthread_t thread;
  int rc;
  
- //TODO: Ignore SIGPIPE
- 
+ //Ignore SIGPIPE
+ void *oldSigpipe=signal(SIGPIPE,sigpipeHandler);
  //Initiate network interface
  if((acceptFd=socket(AF_INET,SOCK_STREAM,0))<0) error("Cannot open listening socket!");
   
@@ -89,30 +93,33 @@ SEXP startTrigger(SEXP port){
   //We musn't lock the mutex if it was already locked in init 
   if(processedJobs>0) pthread_mutex_lock(&idleM);
   pthread_cond_wait(&idleC,&idleM);
-  pthread_mutex_unlock(&idleM); 
-    
-  pthread_mutex_lock(&gqM);
+  pthread_mutex_unlock(&idleM);  
+      
+  pthread_mutex_lock(&gqM); 
   while(GlobalQueue.headWork!=NULL){
    working=1;
-   GlobalQueue.headWork->working=1;
-   Connection *c=GlobalQueue.headWork->c;
+   WorkBuffer *WB=GlobalQueue.headWork;
+   Rprintf("Reading headWork\n");
+   WB->working=1;
+   Connection *c=WB->c;
    pthread_mutex_unlock(&gqM);
   
    //TODO: Execute processing code on the GlobalQueue.headWork's contents
    //Dummy work  
-   usleep(1500000); 
+   usleep(1500000);  
    
    //WORK DONE
    processedJobs++;
    //Locking gqM to update the global state 
    pthread_mutex_lock(&gqM);
    lastDoneConnection=c;
-   char tmpResponse[]="CusCus\r\n\r\n";
+   char tmpResponse[]="CusCus\r\n\r\n"; 
    lastResult=malloc(strlen(&tmpResponse)+1);
    strcpy(lastResult,&tmpResponse);
    working=0;
-   GlobalQueue.headWork->working=0;
-   killWorkBuffer(GlobalQueue.headWork);
+   WB->working=0;
+   lastOrphaned=WB->orphaned;
+   killWorkBuffer(WB);
    pthread_mutex_unlock(&gqM);
    
    //Notifying Triggr to initiate the output sending
@@ -126,7 +133,11 @@ SEXP startTrigger(SEXP port){
   pthread_mutex_unlock(&gqM);
   
  }
+ //Wait for trigger thread
  pthread_join(thread,NULL);
+ //Restore sigpipe
+ signal(SIGPIPE,oldSigpipe);
+ 
  Rprintf("Clean exit of TriggR. There was %d executed jobs.\n",processedJobs);
  return(R_NilValue);
 }

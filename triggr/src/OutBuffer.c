@@ -1,7 +1,7 @@
 
 void killOutputBuffer(OutBuffer *o){
  Connection *c=o->c;
- free(o->buffer);
+ if(o->buffer) free(o->buffer);
  if(o==c->tailOut) c->tailOut=o->prv;
  if(o==c->headOut) c->headOut=o->nxt;
  if(o->prv!=NULL) o->prv->nxt=o->nxt;

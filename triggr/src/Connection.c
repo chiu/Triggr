@@ -38,22 +38,23 @@ void tryResolveConnection(Connection* c){
     //printf("Read still possible\n");
    } //else we can still get some message, so nothing is needed
   }else{
-   printf("--b\n");
    //In theory we have something to send; but can we?
    if(!c->canWrite){
     //printf("Some-writes-lost exit of connection #%d\n",c->ID);
     killConnection(c);
    } //else we still can write, so nothing is needed
-   printf("--c\n");
   }
  }else{
   //printf("Still work to do... Can't stop without it\n");
   if(!c->canWrite){
+   //We have work, but we can't write -- connection killed, output orphaned
    ev_io_stop(lp,&c->aWatch);
-  }
-  if(!c->canWrite){
+   killConnection(c);
+  } else if(!c->canRead){
+   //We just can't read -- probably client just half-closed connection and is still receiving
    ev_io_stop(lp,&c->qWatch);
   }
+  //else everything is ok and we just carry on with writing
  }
 }
 
