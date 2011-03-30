@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h> 
-
+ 
 #define EV_STANDALONE 7
 #include "ev.c"
 
@@ -49,7 +49,7 @@ void makeGlobalQueue(){
 void sigpipeHandler(int sig){
  //Do very nothing
 }
-
+ 
 //Function running the trigger
 SEXP startTrigger(SEXP port){
  R_CStackLimit=(uintptr_t)-1;
@@ -140,3 +140,19 @@ SEXP startTrigger(SEXP port){
  Rprintf("Clean exit of TriggR. There was %d executed jobs.\n",processedJobs);
  return(R_NilValue);
 }
+
+
+//Some debug
+/*void DumpWorkBuffs(Connection *c){
+ WorkBuffer *iwb;
+ Rprintf("Work buffs: ");
+ if(c->headWork) for(iwb=c->headWork;iwb!=NULL;iwb=iwb->nxt) Rprintf("|%d|",iwb);
+ Rprintf("\n");
+}*/
+
+/*void DumpOutBuffs(Connection *c,int j){
+ OutBuffer *iob;
+ Rprintf("Out buffs %d:",j);
+ if(c->headOut) for(iob=c->headOut;iob!=NULL;iob=iob->nxt) Rprintf(":%d:",iob);
+ Rprintf("\n");
+}*/
