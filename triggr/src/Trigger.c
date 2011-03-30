@@ -2,7 +2,6 @@
 
 static void cbIdleAgain(struct ev_loop *loop,ev_async *this,int revent){
  pthread_mutex_lock(&gqM);
- 
  //Put the output on the write queue of the connection
  if(!lastOrphaned) makeOutputBuffer(lastResult,lastDoneConnection);//This also starts writer watchers
  
@@ -17,7 +16,7 @@ static void cbIdleAgain(struct ev_loop *loop,ev_async *this,int revent){
 }
 
 static void onTim(struct ev_loop *lp,ev_timer *this,int revents){
- Rprintf("TriggR is alive. %d processed jobs, %d in processing now.\n",processedJobs,working);
+ Rprintf("TriggR is alive. %d jobs form %d clients processed, %d in processing now, %d clients connected.\n",processedJobs,clients,working,curClients);
 }
 
 void* trigger(void *arg){

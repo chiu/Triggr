@@ -10,6 +10,7 @@ struct _WorkBuffer{
 };
 
 void killWorkBuffer(WorkBuffer *w){
+ Connection *c=w->c;
  //This function must be called with globalQueue mutex locked
  //Anyway, remove from connection queue
  if(w->c){
@@ -33,5 +34,4 @@ void killWorkBuffer(WorkBuffer *w){
   if(w->buffer) free(w->buffer);
   free(w);
  }
-
 }

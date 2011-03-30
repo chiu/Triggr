@@ -94,19 +94,18 @@ SEXP startTrigger(SEXP port){
   if(processedJobs>0) pthread_mutex_lock(&idleM);
   pthread_cond_wait(&idleC,&idleM);
   pthread_mutex_unlock(&idleM);  
-      
+       
   pthread_mutex_lock(&gqM); 
   while(GlobalQueue.headWork!=NULL){
    working=1;
    WorkBuffer *WB=GlobalQueue.headWork;
-   Rprintf("Reading headWork\n");
    WB->working=1;
    Connection *c=WB->c;
    pthread_mutex_unlock(&gqM);
   
    //TODO: Execute processing code on the GlobalQueue.headWork's contents
    //Dummy work  
-   usleep(1500000);  
+   usleep(10);   
    
    //WORK DONE
    processedJobs++;

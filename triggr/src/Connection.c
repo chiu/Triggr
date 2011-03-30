@@ -22,11 +22,13 @@ inline void killConnection(Connection *c){
  if(c==GlobalQueue.headCon) GlobalQueue.headCon=c->nxt;
  if(c->prv) c->prv->nxt=c->nxt;
  if(c->nxt) c->nxt->prv=c->prv;
+ curClients--;
  freeIB(&c->IB);
  free(c);
 }
 
 void tryResolveConnection(Connection* c){
+ 
  //Try to close and destroy connection if it is not needed
  if(c->headWork==NULL){
   //Ok, nothing is here to compute 
@@ -52,6 +54,7 @@ void tryResolveConnection(Connection* c){
    killConnection(c);
   } else if(!c->canRead){
    //We just can't read -- probably client just half-closed connection and is still receiving
+   Rprintf("Can't read!\n");
    ev_io_stop(lp,&c->qWatch);
   }
   //else everything is ok and we just carry on with writing
@@ -135,18 +138,20 @@ static void cbRead(struct ev_loop *lp,struct ev_io *this,int revents){
 static void cbWrite(struct ev_loop *lp,ev_io *this,int revents){
  Connection* c;
  c=this->data;
- if(c->headOut==NULL){
+ pthread_mutex_lock(&gqM);
+ OutBuffer *o=c->headOut;
+ pthread_mutex_unlock(&gqM);
+ 
+ if(o==NULL){
   //Queue is emty -- stop this watcher
   ev_io_stop(lp,this);
  }else{
   //Continue streaming outs
-  OutBuffer* o;
-  o=c->headOut;
   o->streamming=1;
   int written=write(this->fd,o->buffer+o->alrSent,o->size-o->alrSent);
   if(written<0){
    if(errno!=EAGAIN){
-    printf("Error %d while writing: %s\n",errno,strerror(errno));
+    printf("Error %d while writing: %s, in connection %d and buffer %d (%d)\n",errno,strerror(errno),c,o,c->headOut);
     c->canWrite=0;
     pthread_mutex_lock(&gqM);
     tryResolveConnection(c);
@@ -155,8 +160,8 @@ static void cbWrite(struct ev_loop *lp,ev_io *this,int revents){
   }else{
    o->alrSent+=written;
    if(o->alrSent==o->size){
-    killOutputBuffer(o);
     pthread_mutex_lock(&gqM);
+    killOutputBuffer(o);
     tryResolveConnection(c);
     pthread_mutex_unlock(&gqM);
    }
@@ -218,7 +223,8 @@ static void cbAccept(struct ev_loop *lp,ev_io *this,int revents){
  
  ev_io_start(lp,&connection->qWatch); 
  
- Rprintf("Client connected\n");
+ clients++;
+ curClients++;
  
  //Make global queue acessible again
  pthread_mutex_unlock(&gqM);

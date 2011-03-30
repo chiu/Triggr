@@ -49,6 +49,8 @@ int active=1;
 int port;
 
 int count=0;
+int clients=0;
+int curClients=0;
 
 int acceptFd;
 
@@ -79,3 +81,5 @@ struct{
  Connection* headCon;
  int curCon;
 } GlobalQueue;
+
+
