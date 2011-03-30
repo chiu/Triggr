@@ -28,7 +28,7 @@ OutBuffer *makeOutputBuffer(const char *what,Connection *c){
     OB->prv=OB->nxt=NULL;
    }else{
     OB->prv=c->tailOut;
-    c->tailWork=OB;
+    c->tailOut=OB;
     OB->prv->nxt=OB;
     OB->nxt=NULL;
    }
