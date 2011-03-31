@@ -28,6 +28,17 @@ struct _InBuffer{
  int state; //0-uncompleted, 1-finished, 2-error, 3-eof
 };
 
+struct _WorkBuffer{
+ char* buffer;
+ int working;
+ Connection* c;
+ int orphaned;
+ WorkBuffer* nxt;
+ WorkBuffer* prv;
+ WorkBuffer* globalNxt;
+ WorkBuffer* globalPrv;
+};
+
 struct _Connection{
  struct ev_io qWatch;
  struct ev_io aWatch;

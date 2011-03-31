@@ -1,13 +1,3 @@
-struct _WorkBuffer{
- char* buffer;
- int working;
- Connection* c;
- int orphaned;
- WorkBuffer* nxt;
- WorkBuffer* prv;
- WorkBuffer* globalNxt;
- WorkBuffer* globalPrv;
-};
 
 void killWorkBuffer(WorkBuffer *w){
  Connection *c=w->c;
