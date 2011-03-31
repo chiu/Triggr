@@ -3,9 +3,11 @@
 static void cbIdleAgain(struct ev_loop *loop,ev_async *this,int revent){
  pthread_mutex_lock(&gqM);
  //Put the output on the write queue of the connection
- if(!lastOrphaned) makeOutputBuffer(lastResult,lastDoneConnection);//This also starts writer watchers
- 
- free(lastResult);//Malloc'ed in code.c
+ if(active && !lastOrphaned) makeOutputBuffer(lastResult,lastDoneConnection);//This also starts writer watchers
+ if(!active){
+  ev_break(lp,EVBREAK_ONE);
+ }
+ if(lastResult) free(lastResult);//Malloc'ed in code.c
  
  pthread_mutex_unlock(&gqM);
  
@@ -41,7 +43,10 @@ void* trigger(void *arg){
  //Run loop
  ev_run(lp,0);
 
- //Clean up
+ //Clean up; we don't need any locks since main thread is waiting for a join now
+ Rprintf("Cleaning up...\n");
+ while(GlobalQueue.headCon!=NULL) killConnection(GlobalQueue.headCon);
  ev_loop_destroy(lp);
+ Rprintf("Trigger thread terminates NOW...\n");
  return(NULL);
 }

@@ -111,6 +111,11 @@ SEXP startTrigger(SEXP port){
    
    //WORK DONE
    processedJobs++;
+   if(tmpResponse[0]=='Q'){
+    //Trigger triggr down
+    active=0;
+   }
+
    //Locking gqM to update the global state 
    pthread_mutex_lock(&gqM);
    lastDoneConnection=c;
