@@ -40,8 +40,10 @@
 
 void makeGlobalQueue(){
  pthread_mutex_lock(&gqM);
- GlobalQueue.tailWork=NULL;
- GlobalQueue.headWork=NULL;
+ GlobalQueue.tailWork=
+  GlobalQueue.headWork=
+   GlobalQueue.tailCon=
+    GlobalQueue.headCon=NULL;
  GlobalQueue.curCon=0;
  pthread_mutex_unlock(&gqM);
 }
@@ -50,6 +52,14 @@ void sigpipeHandler(int sig){
  //Do very nothing
 }
 
+SEXP getConID(){
+ SEXP ans;
+ if(!GlobalQueue.headWork) error("getConID() called outside callback!\n");
+ PROTECT(ans=allocVector(INTSXP,1));
+ INTEGER(ans)[0]=curConID;
+ UNPROTECT(1);
+ return(ans); 
+}
 
 //Function running the trigger
 SEXP startTrigger(SEXP port,SEXP wrappedCall,SEXP envir){
@@ -78,6 +88,8 @@ SEXP startTrigger(SEXP port,SEXP wrappedCall,SEXP envir){
  if(listen(acceptFd,MAX_CLIENTS)<0) error("Cannot listen with server!");
  //Libev will be binded to this interface in the trigger thread
  
+ active=1; 
+
  pthread_mutex_lock(&idleM); //Hold the server from true staring 
  rc=pthread_create(&thread,NULL,trigger,NULL);
  Rprintf("Connecting socket...\n");
@@ -106,11 +118,12 @@ SEXP startTrigger(SEXP port,SEXP wrappedCall,SEXP envir){
    SEXP arg;
    PROTECT(arg=allocVector(STRSXP,1));
    SET_STRING_ELT(arg,0,mkChar(WB->buffer));
+   curConID=c->ID;
    pthread_mutex_unlock(&gqM);
   
    //Execute processing code on the GlobalQueue.headWork's contents
    SEXP response;
-   char *responseC;
+   char *responseC=NULL;
    SEXP call;
    PROTECT(call=lang2(wrappedCall,arg));
    PROTECT(response=eval(call,envir));

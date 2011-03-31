@@ -1,3 +1,6 @@
+getConID<-function(){
+ .Call("getConID");
+}
 
 serve<-function(callback,port=7777L){
  stopifnot(is.function(callback));
