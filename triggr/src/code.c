@@ -49,9 +49,10 @@ void makeGlobalQueue(){
 void sigpipeHandler(int sig){
  //Do very nothing
 }
- 
+
+
 //Function running the trigger
-SEXP startTrigger(SEXP port){
+SEXP startTrigger(SEXP port,SEXP wrappedCall,SEXP envir){
  R_CStackLimit=(uintptr_t)-1;
  active=1; count=0;
  port=INTEGER(port)[0];
@@ -102,34 +103,37 @@ SEXP startTrigger(SEXP port){
    WB->working=1;
    termCon=0;
    Connection *c=WB->c;
-   char *tmpResponse=malloc(strlen(WB->buffer)+1);
-   strcpy(tmpResponse,WB->buffer);
+   SEXP arg;
+   PROTECT(arg=allocVector(STRSXP,1));
+   SET_STRING_ELT(arg,0,mkChar(WB->buffer));
    pthread_mutex_unlock(&gqM);
   
-   //TODO: Execute processing code on the GlobalQueue.headWork's contents
-   //Dummy work  
-   usleep(10);   
-   
+   //Execute processing code on the GlobalQueue.headWork's contents
+   SEXP response;
+   char *responseC;
+   SEXP call;
+   PROTECT(call=lang2(wrappedCall,arg));
+   PROTECT(response=eval(call,envir));
+   if(TYPEOF(response)!=STRSXP){
+    if(TYPEOF(response)==INTSXP && LENGTH(response)==1){
+     int respCode=INTEGER(response)[0];
+     if(respCode==0) active=0; else termCon=1; 
+     responseC=NULL;
+    }else{
+     error("PANIC: Bad callback wrapper result! Triggr will dirty-collapse now.\n");
+    }
+   } else responseC=CHAR(STRING_ELT(response,0));
+   UNPROTECT(3);
+
    //WORK DONE
    processedJobs++;
-   if(tmpResponse[0]=='Q'){
-    //Trigger triggr down
-    active=0;
-   }
-
-   if(tmpResponse[0]=='T'){
-    //Terminate connection
-    termCon=1;
-   }
-
    //Locking gqM to update the global state 
    pthread_mutex_lock(&gqM);
    lastDoneConnection=c;
-   if(active){
-    lastResult=malloc(strlen(tmpResponse)+1);
-    strcpy(lastResult,tmpResponse);
+   if(active && !termCon){
+    lastResult=malloc(strlen(responseC)+1);
+    strcpy(lastResult,responseC);
    } else lastResult=NULL;
-   free(tmpResponse);
    working=0;
    WB->working=0;
    lastOrphaned=WB->orphaned;
@@ -152,7 +156,7 @@ SEXP startTrigger(SEXP port){
  pthread_join(thread,NULL);
  //Restore sigpipe
  signal(SIGPIPE,oldSigpipe);
- 
+ close(acceptFd);
  Rprintf("Clean exit of TriggR. There was %d executed jobs.\n",processedJobs);
  return(R_NilValue);
 }
