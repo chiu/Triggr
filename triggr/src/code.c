@@ -101,6 +101,8 @@ SEXP startTrigger(SEXP port){
    WorkBuffer *WB=GlobalQueue.headWork;
    WB->working=1;
    Connection *c=WB->c;
+   char *tmpResponse=malloc(strlen(WB->buffer)+1);
+   strcpy(tmpResponse,WB->buffer);
    pthread_mutex_unlock(&gqM);
   
    //TODO: Execute processing code on the GlobalQueue.headWork's contents
@@ -112,9 +114,11 @@ SEXP startTrigger(SEXP port){
    //Locking gqM to update the global state 
    pthread_mutex_lock(&gqM);
    lastDoneConnection=c;
-   char tmpResponse[]="CusCus\r\n\r\n"; 
-   lastResult=malloc(strlen(&tmpResponse)+1);
-   strcpy(lastResult,&tmpResponse);
+   if(active){
+    lastResult=malloc(strlen(tmpResponse)+1);
+    strcpy(lastResult,tmpResponse);
+   } else lastResult=NULL;
+   free(tmpResponse);
    working=0;
    WB->working=0;
    lastOrphaned=WB->orphaned;
@@ -124,6 +128,7 @@ SEXP startTrigger(SEXP port){
    //Notifying Triggr to initiate the output sending
    pthread_mutex_lock(&outSchedM);
    ev_async_send(lp,&idleAgain);
+   //And wait till the idle callback ends
    pthread_cond_wait(&outSchedC,&outSchedM);
    pthread_mutex_unlock(&outSchedM);
    
