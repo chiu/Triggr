@@ -100,6 +100,7 @@ SEXP startTrigger(SEXP port){
    working=1;
    WorkBuffer *WB=GlobalQueue.headWork;
    WB->working=1;
+   termCon=0;
    Connection *c=WB->c;
    char *tmpResponse=malloc(strlen(WB->buffer)+1);
    strcpy(tmpResponse,WB->buffer);
@@ -114,6 +115,11 @@ SEXP startTrigger(SEXP port){
    if(tmpResponse[0]=='Q'){
     //Trigger triggr down
     active=0;
+   }
+
+   if(tmpResponse[0]=='T'){
+    //Terminate connection
+    termCon=1;
    }
 
    //Locking gqM to update the global state 
