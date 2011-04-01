@@ -1,3 +1,14 @@
+/* Connection object implementation, IO callbacks
+
+   Copyright (c)2011 Miron Bartosz Kursa
+ 
+   This file is part of triggr R package.
+
+ Triggr is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ Triggr is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ You should have received a copy of the GNU General Public License along with triggr. If not, see http://www.gnu.org/licenses/. */
+
+
 inline void rolloutOutBuffers(Connection* c){
  while(c->headOut!=NULL) killOutputBuffer(c->headOut);
 }
@@ -52,7 +63,6 @@ void tryResolveConnection(Connection* c){
    killConnection(c);
   } else if(!c->canRead){
    //We just can't read -- probably client just half-closed connection and is still receiving
-   Rprintf("Can't read!\n");
    ev_io_stop(lp,&c->qWatch);
   }
   //else everything is ok and we just carry on with writing
@@ -149,7 +159,6 @@ static void cbWrite(struct ev_loop *lp,ev_io *this,int revents){
   int written=write(this->fd,o->buffer+o->alrSent,o->size-o->alrSent);
   if(written<0){
    if(errno!=EAGAIN){
-    printf("Error %d while writing: %s, in connection %d and buffer %d (%d)\n",errno,strerror(errno),c,o,c->headOut);
     c->canWrite=0;
     pthread_mutex_lock(&gqM);
     tryResolveConnection(c);

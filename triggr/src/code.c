@@ -1,3 +1,13 @@
+/* Controller of the R session + additional C chunks
+
+   Copyright (c)2011 Miron Bartosz Kursa
+ 
+   This file is part of triggr R package.
+
+ Triggr is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ Triggr is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ You should have received a copy of the GNU General Public License along with triggr. If not, see http://www.gnu.org/licenses/. */
+
 #include <R.h>
 #include <Rdefines.h>
 #include <Rinternals.h>
@@ -36,8 +46,6 @@
 //Trigger thread
 #include "Trigger.c"
 
-
-
 void makeGlobalQueue(){
  pthread_mutex_lock(&gqM);
  GlobalQueue.tailWork=
@@ -67,7 +75,7 @@ SEXP startTrigger(SEXP port,SEXP wrappedCall,SEXP envir){
  active=1; count=0;
  port=INTEGER(port)[0];
  makeGlobalQueue(); 
- Rprintf("Initiating TriggR...\n"); 
+ Rprintf("Initiating triggr...\n"); 
  pthread_t thread;
  int rc;
  
@@ -92,12 +100,6 @@ SEXP startTrigger(SEXP port,SEXP wrappedCall,SEXP envir){
 
  pthread_mutex_lock(&idleM); //Hold the server from true staring 
  rc=pthread_create(&thread,NULL,trigger,NULL);
- Rprintf("Connecting socket...\n");
- 
- 
- Rprintf("Init simulation START\n");
- usleep(200000);//Simulate initialisation
- Rprintf("Init simulation STOP\n");
  
  Rprintf("Listening on port %d.\n",port);
  
@@ -174,7 +176,7 @@ SEXP startTrigger(SEXP port,SEXP wrappedCall,SEXP envir){
  //Restore sigpipe
  signal(SIGPIPE,oldSigpipe);
  close(acceptFd);
- Rprintf("Clean exit of TriggR. There was %d executed jobs.\n",processedJobs);
+ Rprintf("Clean exit of triggr. There was %d executed jobs.\n",processedJobs);
  return(R_NilValue);
 }
 

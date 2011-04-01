@@ -1,4 +1,16 @@
-#define SIZE_LIMIT 1000000
+/* Input buffer object implementation
+
+   Copyright (c)2011 Miron Bartosz Kursa
+ 
+   This file is part of triggr R package.
+
+ Triggr is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ Triggr is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ You should have received a copy of the GNU General Public License along with triggr. If not, see http://www.gnu.org/licenses/. */
+
+//Size limit of the incomming message (in chars). Defaulted with 1GB, but it is wise to tune it to, roughly, not more than 1/4 of memory you are willing to give the R worker. For only tiny messages exchange, it is good to set it very low, so that the server could automatically reject the misconnected clients sending a lot of data in. 
+
+#define SIZE_LIMIT 1073741824 //1024*1024*1024
 
 void makeIB(InBuffer *ans){
  ans->buffer=malloc(512);
