@@ -15,6 +15,7 @@ struct _OutBuffer{
  size_t size;
  size_t alrSent;
  int streamming;
+ int killAfter;
  OutBuffer* nxt;
  OutBuffer* prv;
  Connection* c;
@@ -63,6 +64,7 @@ int count=0;
 int clients=0;
 int curClients=0;
 int curConID;
+int killConnectionAftrSend=0;
 
 int acceptFd;
 

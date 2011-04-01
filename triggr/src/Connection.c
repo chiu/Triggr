@@ -1,5 +1,3 @@
-
-
 inline void rolloutOutBuffers(Connection* c){
  while(c->headOut!=NULL) killOutputBuffer(c->headOut);
 }
@@ -160,6 +158,7 @@ static void cbWrite(struct ev_loop *lp,ev_io *this,int revents){
   }else{
    o->alrSent+=written;
    if(o->alrSent==o->size){
+    if(o->killAfter) c->canWrite=c->canRead=0;
     pthread_mutex_lock(&gqM);
     killOutputBuffer(o);
     tryResolveConnection(c);

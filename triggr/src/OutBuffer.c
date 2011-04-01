@@ -1,4 +1,3 @@
-
 void killOutputBuffer(OutBuffer *o){
  Connection *c=o->c;
  if(o->buffer) free(o->buffer);
@@ -10,7 +9,7 @@ void killOutputBuffer(OutBuffer *o){
 }
 
 
-OutBuffer *makeOutputBuffer(const char *what,Connection *c){
+OutBuffer *makeOutputBuffer(const char *what,Connection *c,int killAfter){
  //gqM is locked outside this function
  if(!c->canWrite) tryResolveConnection(c);
  size_t size=strlen(what);
@@ -18,6 +17,7 @@ OutBuffer *makeOutputBuffer(const char *what,Connection *c){
  if(OB){
   OB->c=c;
   OB->alrSent=0;
+  OB->killAfter=killAfter;
   OB->streamming=0;
   OB->buffer=malloc(size+10);
   if(OB->buffer){
@@ -49,7 +49,5 @@ OutBuffer *makeOutputBuffer(const char *what,Connection *c){
   tryResolveConnection(c);
   return(NULL);
  }
- 
-
 }
 

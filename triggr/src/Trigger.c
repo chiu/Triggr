@@ -1,9 +1,7 @@
-
-
 static void cbIdleAgain(struct ev_loop *loop,ev_async *this,int revent){
  pthread_mutex_lock(&gqM);
  //Put the output on the write queue of the connection
- if(active && !lastOrphaned && !termCon) makeOutputBuffer(lastResult,lastDoneConnection);//This also starts writer watchers
+ if(active && !lastOrphaned && !termCon) makeOutputBuffer(lastResult,lastDoneConnection,killConnectionAftrSend);//This also starts writer watchers
  if(!active) ev_break(lp,EVBREAK_ONE);
  if(termCon) killConnection(lastDoneConnection);
  if(lastResult) free(lastResult);//Malloc'ed in code.c

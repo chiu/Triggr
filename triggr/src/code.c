@@ -120,7 +120,7 @@ SEXP startTrigger(SEXP port,SEXP wrappedCall,SEXP envir){
    SET_STRING_ELT(arg,0,mkChar(WB->buffer));
    curConID=c->ID;
    pthread_mutex_unlock(&gqM);
-  
+   
    //Execute processing code on the GlobalQueue.headWork's contents
    SEXP response;
    char *responseC=NULL;
@@ -135,7 +135,11 @@ SEXP startTrigger(SEXP port,SEXP wrappedCall,SEXP envir){
     }else{
      error("PANIC: Bad callback wrapper result! Triggr will dirty-collapse now.\n");
     }
-   } else responseC=CHAR(STRING_ELT(response,0));
+   }else{
+    if(LENGTH(response)<0 || LENGTH(response)>2) error("PANIC: Bad callback wrapper result! Triggr will dirty-collapse now.\n");
+    killConnectionAftrSend=(LENGTH(response)==2);
+    responseC=CHAR(STRING_ELT(response,0));
+   }
    UNPROTECT(3);
 
    //WORK DONE
