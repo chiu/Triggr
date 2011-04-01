@@ -1,3 +1,13 @@
+/* Trigger thread
+
+   Copyright (c)2011 Miron Bartosz Kursa
+ 
+   This file is part of triggr R package.
+
+ Triggr is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ Triggr is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ You should have received a copy of the GNU General Public License along with triggr. If not, see http://www.gnu.org/licenses/. */
+
 static void cbIdleAgain(struct ev_loop *loop,ev_async *this,int revent){
  pthread_mutex_lock(&gqM);
  //Put the output on the write queue of the connection
@@ -15,7 +25,7 @@ static void cbIdleAgain(struct ev_loop *loop,ev_async *this,int revent){
 }
 
 static void onTim(struct ev_loop *lp,ev_timer *this,int revents){
- Rprintf("TriggR is alive. %d jobs form %d clients processed, %d in processing now, %d clients connected.\n",processedJobs,clients,working,curClients);
+ Rprintf("Triggr is alive; %d jobs form %d clients processed, %d in processing now, %d clients connected.\n",processedJobs,clients,working,curClients);
 }
 
 void* trigger(void *arg){
@@ -29,7 +39,7 @@ void* trigger(void *arg){
  
  //Installing server-is-alive timer
  struct ev_timer timer;
- ev_timer_init(&timer,onTim,20.,20.);
+ ev_timer_init(&timer,onTim,5.,35.);
  ev_timer_start(lp,&timer);
 
  //Installing accept watcher

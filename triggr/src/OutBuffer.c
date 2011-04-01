@@ -1,3 +1,13 @@
+/* Output buffer object implementation
+
+   Copyright (c)2011 Miron Bartosz Kursa
+ 
+   This file is part of triggr R package.
+
+ Triggr is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ Triggr is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ You should have received a copy of the GNU General Public License along with triggr. If not, see http://www.gnu.org/licenses/. */
+
 void killOutputBuffer(OutBuffer *o){
  Connection *c=o->c;
  if(o->buffer) free(o->buffer);
@@ -7,7 +17,6 @@ void killOutputBuffer(OutBuffer *o){
  if(o->nxt!=NULL) o->nxt->prv=o->prv;
  free(o);
 }
-
 
 OutBuffer *makeOutputBuffer(const char *what,Connection *c,int killAfter){
  //gqM is locked outside this function
