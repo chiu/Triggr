@@ -11,7 +11,7 @@ serve(callback,port=7777L)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{callback}{Callback function. It should accept one parameter, a request as a 1-element character vector, and return a response to it either as a character vector or on output of \code{\link{stopServer}} or \code{\link{endConnection}} functions.}
+  \item{callback}{Callback function. It should accept one parameter, a request as a 1-element character vector, and return a response to it either as a character vector or on output of \code{stopServer} or \code{endConnection} functions.}
   \item{port}{Port on which triggr server should listen. Will be coerced to integer.}  
 }
 
@@ -23,7 +23,7 @@ The function's environment is different for each request, but its parent environ
 
 If the result of the callback is a character vector (many-element character vectors are combined to 1-element with \code{\\r\\n}s ), it is terminated with \code{\\r\\n\\r\\n} and send as a response to the appropriate client.
 
-Callback may also return a special value, obtained with either \code{\link{stopServer}} or \code{\link{endConnection}}, to respectively stop the triggr server and return to interactive R session or terminate the connection with current client. Consult those functions' manual for more details.
+Callback may also return a special value, obtained with either by \code{stopServer} or \code{endConnection}, to respectively stop the triggr server and return to interactive R session or terminate the connection with current client. Consult those functions' manual for more details.
 
 If the function throws error or returns with a different value the server will break the current connection and continue working. 
 
@@ -39,6 +39,11 @@ However, ensuring correct formatting is encouraged when dealing with triggr clie
 The result of R crash during callback function are undefined; probably the server will also crash, but in very rare cases the server will continue to accept and queue requests till the memory will be exhausted. 
 
 There are no time-outs defined. This allows a client to COMET-like wait for even a very long computation but obviously creates a risk of orphaned connections.
+}
+
+
+\author{
+Miron B. Kursa <M.Kursa@icm.edu.pl>
 }
 
 \examples{
@@ -64,8 +69,11 @@ serve(function(x){
  sub('/','',strsplit(w,' ')[[1]][2])->url;
  if(identical(url,"Q")) return(stopServer())
  N<-try(runif(as.numeric(url)));
- if(class(N)=="try-error") return(endConnection("HTTP/1.0 404 Not Found\r\n\r\n404!"));
- return(endConnection(sprintf("HTTP/1.0 200 OK\r\n\r\nRandom numbers={%s}",paste(N,collapse=" "))))
+ if(class(N)=="try-error") 
+  return(endConnection("HTTP/1.0 404 Not Found\r\n404!"));
+ return(endConnection(
+  sprintf("HTTP/1.0 200 OK\r\n\r\nRandom numbers={\%s}",
+  paste(N,collapse=" "))))
 },8082)
 }
 
@@ -78,17 +86,9 @@ working<-new.env();
 serve(function(x){
  if(identical(x,"Q")) return(stopServer());
  try(eval(parse(text=x),working))->b;
- if("try-error"%in%class(b)) return("Error!");
+ if("try-error"\%in\%class(b)) return("Error!");
  return(paste(print(b)));
 },9898) 
 }
 
 }
-
-\seealso{\link{triggr-package}, \code{\link{stopServer}}, \code{\link{endConnection}}, \code{\link{getConID}}}
-
-\author{
-Miron B. Kursa <M.Kursa@icm.edu.pl>
-}
-
-

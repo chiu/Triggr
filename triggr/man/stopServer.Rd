@@ -17,17 +17,6 @@ stopServer()
 This function simply returns \code{0L}, so one may simply write \code{return(0L)} to get the same effect.
 }
 
-\examples{
-\dontrun{
-serve(function(x){
- ...
- return(stopServer());
- ...
-}) 
-}
-}
-
-\seealso{\code{\link{serve}},\code{\link{endConnection}}}
 
 \author{
 Miron B. Kursa <M.Kursa@icm.edu.pl>

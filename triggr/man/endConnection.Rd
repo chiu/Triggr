@@ -5,12 +5,11 @@
 \code{endConnection} function can be called from a callback function to end the connection with the client that sent the currently processed request. It can be done either immediately or just after sending a response.
 }
 \usage{
-endConenction(x)
-endConnection()
+endConnection(x)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{x}{Character vector being a response to the current request. If this agrument is provided, the server first sends it to the client and then disconnects.}
+  \item{x}{Character vector being a response to the current request. This argument may be provided or not; if it is, the server first sends it to the client and then disconnects.}
 }
 
 
@@ -21,7 +20,7 @@ endConnection()
 This function simply returns 9L (in fact any non-zero integer can be used) if no argument is provided or its argument with class attribute set to 'end-connection'. 
 }
 
-\seealso{\code{\link{serve}},\code{\link{stopServer}}}
+
 
 \author{
 Miron B. Kursa <M.Kursa@icm.edu.pl>
