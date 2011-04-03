@@ -19,16 +19,13 @@ serve<-function(callback,port=7777L){
  as.integer(port)->port; 
  .Call("startTrigger",port,
    function(x){
-    #DEBUG:
-    if(x=="Q") return(0L);
-    #:DEBUG
     try(callback(x))->y;
     if(is.integer(y)) return(y);
     if(!is.character(y) | class(y)=="try-error") return(9L);
     if(class(y)!="end-connection")
-     y<-paste(paste(y,collapse=""),"\r\n\r\n",sep="") 
+     y<-paste(paste(y,collapse="\r\n"),"\r\n\r\n",sep="") 
     else
-     y<-c(paste(paste(y,collapse=""),"\r\n\r\n",sep=""),'');
+     y<-c(paste(paste(y,collapse="\r\n"),"\r\n\r\n",sep=""),'');
     return(y);
    },new.env());
 }
