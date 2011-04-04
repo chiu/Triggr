@@ -15,7 +15,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <sys/socket.h> 
-#include <linux/in.h>
+#include <netinet/in.h>
 #include <sys/stat.h> 
 #include <fcntl.h>  
 #include <stdio.h>

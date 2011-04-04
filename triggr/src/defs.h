@@ -107,4 +107,6 @@ struct{
  int curCon;
 } GlobalQueue;
 
+void tryResolveConnection(Connection* c);
+
 
