@@ -10,14 +10,14 @@
 
 
 getConID<-function(){
- .Call("getConID");
+ .Call(getCID);
 }
 
 serve<-function(callback,port=7777L){
  stopifnot(is.function(callback));
  stopifnot(length(port)==1);
  as.integer(port)->port; 
- .Call("startTrigger",port,
+ .Call(startTrigger,port,
    function(x){
     try(callback(x))->y;
     if(is.integer(y)) return(y);

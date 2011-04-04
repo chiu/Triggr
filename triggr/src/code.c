@@ -60,7 +60,7 @@ void sigpipeHandler(int sig){
  //Do very nothing
 }
 
-SEXP getConID(){
+SEXP getCID(){
  SEXP ans;
  if(!GlobalQueue.headWork) error("getConID() called outside callback!\n");
  PROTECT(ans=allocVector(INTSXP,1));
