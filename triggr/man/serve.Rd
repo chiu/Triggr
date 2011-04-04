@@ -23,7 +23,7 @@ The function's environment is different for each request, but its parent environ
 
 If the result of the callback is a character vector (many-element character vectors are combined to 1-element with \code{\\r\\n}s ), it is terminated with \code{\\r\\n\\r\\n} and send as a response to the appropriate client.
 
-Callback may also return a special value, obtained with either by \code{stopServer} or \code{endConnection}, to respectively stop the triggr server and return to interactive R session or terminate the connection with current client. Consult those functions' manual for more details.
+Callback may also return a special value, obtained with either by a call to the \code{stopServer} or \code{endConnection} functions, to respectively stop the triggr server and return to interactive R session or terminate the connection with current client. Consult those functions' manual for more details.
 
 If the function throws error or returns with a different value the server will break the current connection and continue working. 
 
@@ -80,15 +80,20 @@ serve(function(x){
 \dontrun{
 #Simple telnet interface to R
 #One should never use such server because it is a security hole.
-#Issue telnet localhost 9898 and start using R; 
+#Issue telnet localhost 9999 and just start using R; 
 #remember to hit ENTER twice to generate RNRN and submit.
 working<-new.env();
 serve(function(x){
  if(identical(x,"Q")) return(stopServer());
- try(eval(parse(text=x),working))->b;
+ try(eval(parse(text=strsplit(x,split="\r\n")[[1]]),working))->b;
  if("try-error"\%in\%class(b)) return("Error!");
- return(paste(print(b)));
-},9898) 
+ #Getting print output
+ textConnection(NULL,'w')->output;
+ sink(output);print(b);sink();
+ textConnectionValue(output)->ans;
+ close(output);
+ #Send it back
+ return(ans);
+},9999) 
 }
-
 }
