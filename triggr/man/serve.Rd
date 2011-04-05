@@ -65,7 +65,9 @@ serve(function(x){
 #localhost:8080/Q to quit
 serve(function(x){
  #Getting URL
- w<-readLines(textConnection(x));
+ textConnection(x)->tc;
+ w<-readLines(tc);
+ close(tc);
  sub('/','',strsplit(w,' ')[[1]][2])->url;
  if(identical(url,"Q")) return(stopServer())
  N<-try(runif(as.numeric(url)));
@@ -74,7 +76,7 @@ serve(function(x){
  return(endConnection(
   sprintf("HTTP/1.0 200 OK\r\n\r\nRandom numbers={\%s}",
   paste(N,collapse=" "))))
-},8082)
+},8080)
 }
 
 \dontrun{
