@@ -125,7 +125,7 @@ SEXP startTrigger(SEXP port,SEXP wrappedCall,SEXP envir){
    
    //Execute processing code on the GlobalQueue.headWork's contents
    SEXP response;
-   char *responseC=NULL;
+   const char *responseC=NULL;
    SEXP call;
    PROTECT(call=lang2(wrappedCall,arg));
    PROTECT(response=eval(call,envir));
