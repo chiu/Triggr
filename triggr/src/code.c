@@ -22,9 +22,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h> 
- 
-#define EV_STANDALONE 7
-#include "ev.c"
+#include <ev.h>
+#include <errno.h>
 
 #define HAVE_UINTPTR_T 7
 #define CSTACK_DEFNS 7  
