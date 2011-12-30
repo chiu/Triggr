@@ -211,7 +211,8 @@ static void cbAccept(struct ev_loop *lp,ev_io *this,int revents){
  connection->ID=GlobalQueue.curCon++;
  
  //Clear local queues
- connection->headOut=connection->tailOut=connection->headWork=connection->tailWork=NULL;
+ connection->headOut=connection->tailOut=NULL;
+ connection->headWork=connection->tailWork=NULL;
  connection->canRead=1;
  connection->canWrite=1;
  //Make IB for messages

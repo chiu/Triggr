@@ -48,9 +48,9 @@
 void makeGlobalQueue(){
  pthread_mutex_lock(&gqM);
  GlobalQueue.tailWork=
-  GlobalQueue.headWork=
-   GlobalQueue.tailCon=
-    GlobalQueue.headCon=NULL;
+  GlobalQueue.headWork=NULL;
+ GlobalQueue.tailCon=
+  GlobalQueue.headCon=NULL;
  GlobalQueue.curCon=0;
  pthread_mutex_unlock(&gqM);
 }
@@ -69,10 +69,10 @@ SEXP getCID(){
 }
 
 //Function running the trigger
-SEXP startTrigger(SEXP port,SEXP wrappedCall,SEXP envir){
+SEXP startTrigger(SEXP Port,SEXP wrappedCall,SEXP envir){
  R_CStackLimit=(uintptr_t)-1;
  active=1; count=0;
- port=INTEGER(port)[0];
+ port=INTEGER(Port)[0];
  makeGlobalQueue(); 
  pthread_t thread;
  int rc;
