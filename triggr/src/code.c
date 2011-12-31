@@ -86,6 +86,7 @@ SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SE
  
  
  maxMessageLength=INTEGER(MaxMessageLength)[0];
+ inBufferInitSize=(maxMessageLength<MAX_IN_BUFFER_INIT_SIZE)?maxMessageLength:MAX_IN_BUFFER_INIT_SIZE;
  
  //Ignore SIGPIPE
  void *oldSigpipe=signal(SIGPIPE,sigpipeHandler);

@@ -84,6 +84,9 @@ struct ev_loop *lp;
 struct ev_async idleAgain;
 
 //Some parameters
+#define MAX_IN_BUFFER_INIT_SIZE 512
+#define IN_BUFFER_GROW_SIZE 512
+size_t inBufferInitSize;
 size_t maxMessageLength;
 double aliveMessageStart;
 double aliveMessageInter;

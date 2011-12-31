@@ -8,15 +8,12 @@
  Triggr is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  You should have received a copy of the GNU General Public License along with triggr. If not, see http://www.gnu.org/licenses/. */
 
-//Size limit of the incomming message (in chars). Actually set in code.c from serve call.
-#define SIZE_LIMIT maxMessageLength 
-
 void makeIB(InBuffer *ans){
- ans->buffer=malloc(512);
+ ans->buffer=malloc(inBufferInitSize);
  if(!ans->buffer){
   ans->state=2;
  }else{
-  ans->actualSize=512;
+  ans->actualSize=inBufferInitSize;
   ans->truSize=0;
   ans->state=0;
  }
@@ -26,7 +23,8 @@ inline void tryResize(InBuffer *b){
  if(b->actualSize==b->truSize){
   //Seems we need resize
   char *tmp;
-  if((b->actualSize+=512)>SIZE_LIMIT || !(tmp=realloc(b->buffer,b->actualSize))){
+  //This both enforced maxMessage length and handles OOM
+  if((b->actualSize+=IN_BUFFER_GROW_SIZE)>maxMessageLength || !(tmp=realloc(b->buffer,b->actualSize))){
    free(b->buffer);
    b->buffer=NULL;
    b->state=2; 
