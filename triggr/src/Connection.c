@@ -43,10 +43,10 @@ void tryResolveConnection(Connection* c){
   //Ok, nothing is here to compute 
   if(c->headOut==NULL){
    if(!c->canRead){
-    //printf("Clean exit of connection #%d\n",c->ID);
+    //Clean exit of connection
     killConnection(c);
    }else{
-    //printf("Read still possible\n");
+    //Read still possible
    } //else we can still get some message, so nothing is needed
   }else{
    //In theory we have something to send; but can we?

@@ -13,10 +13,13 @@ getConID<-function(){
  .Call(getCID);
 }
 
-serve<-function(callback,port=7777L){
+serve<-function(callback,port=7777L,maxMessageLength=1048576L){
  stopifnot(is.function(callback));
  stopifnot(length(port)==1);
+ stopifnot(length(maxMessageLength)==1);
  as.integer(port)->port; 
+ as.integer(maxMessageLength)->maxMessageLength;
+ if(maxMessageLength<1) stop("Invalid value of maxMessageLength!");
  .Call(startTrigger,port,
    function(x){
     try(callback(x))->y;
@@ -27,7 +30,7 @@ serve<-function(callback,port=7777L){
     else
      y<-c(paste(paste(y,collapse="\r\n"),"\r\n\r\n",sep=""),'');
     return(y);
-   },new.env());
+   },new.env(),as.integer(maxMessageLength));
 }
 
 stopServer<-function() 0L

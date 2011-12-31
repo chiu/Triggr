@@ -8,9 +8,8 @@
  Triggr is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  You should have received a copy of the GNU General Public License along with triggr. If not, see http://www.gnu.org/licenses/. */
 
-//Size limit of the incomming message (in chars). Defaulted with 1GB, but it is wise to tune it to, roughly, not more than 1/4 of memory you are willing to give the R worker. For only tiny messages exchange, it is good to set it very low, so that the server could automatically reject the misconnected clients sending a lot of data in. 
-
-#define SIZE_LIMIT 1073741824 //1024*1024*1024
+//Size limit of the incomming message (in chars). Actually set in code.c from serve call.
+#define SIZE_LIMIT maxMessageLength 
 
 void makeIB(InBuffer *ans){
  ans->buffer=malloc(512);

@@ -7,12 +7,13 @@
 \code{serve} function converts the current session into a triggr server, binding it with a callback function that will handle the incoming requests.
 }
 \usage{
-serve(callback,port=7777L)
+serve(callback,port=7777L,maxMessageLength=1048576L)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{callback}{Callback function. It should accept one parameter, a request as a 1-element character vector, and return a response to it either as a character vector or on output of \code{stopServer} or \code{endConnection} functions.}
-  \item{port}{Port on which triggr server should listen. Will be coerced to integer.}  
+  \item{port}{Port on which triggr server should listen. Will be coerced to integer.} 
+  \item{maxMessageLength}{Maximal length of a single message, in characters. Trigger will allocalte at most this number of bytes, R can take extra up to this value, depending on internal hash state. Defaults to 1MB, should not exceed 1/5 of total RAM.} 
 }
 
 \details{After this function is executed, the server is initiated and the console input is blocked.
@@ -35,6 +36,10 @@ Triggr is non-blocking, and thus it may process one request, receive and queue m
 \note{
 In the current version, triggr does not validate whether a response is correctly formatted (i.e. does not contain \code{\\r\\n\\r\\n}s inside) -- this is intentional, because one may than consider using this feature to adapt triggr to other protocols or simply transfer raw data without any sanitizing encoding (like base64) using socket close as a communication terminator.  
 However, ensuring correct formatting is encouraged when dealing with triggr clients, which will be obviously confused by misformatted input and most probably treat this fact as a communication error.
+
+If the message exceeds \code{maxMessageLength}, connection is closed and all not-send data is lost. Running callback will continue, and its output will be ignored.
+If the RAM is exhausted from some reason, trigger will try to survive by closing connections which are receiving at that time and not accepting new. 
+However, note that the R thread is likely to kill current computation with allocation error in such condition, and the whole process can be killed by OOM killer.
 
 The result of R crash during callback function are undefined; probably the server will also crash, but in very rare cases the server will continue to accept and queue requests till the memory will be exhausted. 
 

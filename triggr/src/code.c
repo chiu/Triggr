@@ -69,13 +69,15 @@ SEXP getCID(){
 }
 
 //Function running the trigger
-SEXP startTrigger(SEXP Port,SEXP wrappedCall,SEXP envir){
+SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength){
  R_CStackLimit=(uintptr_t)-1;
  active=1; count=0;
  port=INTEGER(Port)[0];
  makeGlobalQueue(); 
  pthread_t thread;
  int rc;
+ 
+ maxMessageLength=INTEGER(MaxMessageLength)[0];
  
  //Ignore SIGPIPE
  void *oldSigpipe=signal(SIGPIPE,sigpipeHandler);
@@ -125,8 +127,8 @@ SEXP startTrigger(SEXP Port,SEXP wrappedCall,SEXP envir){
    SEXP response;
    const char *responseC=NULL;
    SEXP call;
-   PROTECT(call=lang2(wrappedCall,arg));
-   PROTECT(response=eval(call,envir));
+   PROTECT(call=lang2(WrappedCall,arg));
+   PROTECT(response=eval(call,Envir));
    if(TYPEOF(response)!=STRSXP){
     if(TYPEOF(response)==INTSXP && LENGTH(response)==1){
      int respCode=INTEGER(response)[0];
