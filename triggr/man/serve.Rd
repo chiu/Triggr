@@ -39,7 +39,7 @@ However, ensuring correct formatting is encouraged when dealing with triggr clie
 
 If the message exceeds \code{maxMessageLength}, connection is closed and all not-send data is lost (this may randomly mean none or all of produced data because of the triggr's event-loop design -- thus treat exceeding this restriction like a connection fail, not a single message fail).
 Possible running callback will continue, yet its output will be ignored.
-That minimal \code{maxMessageLength} is 5, i.e. 1 character + 4, the size of \code{\r\n\r\n}.
+That minimal \code{maxMessageLength} is 5, i.e. 1 character + 4, the size of \code{\\r\\n\\r\\n}.
 Note that this value has nothing to do with the size of messages generated and sent by triggr, which is arbitrary not counting memory constrain. 
 
 If the RAM is exhausted from some reason, trigger will try to survive by closing connections which are receiving at that time and not accepting new. 
