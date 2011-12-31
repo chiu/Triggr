@@ -83,7 +83,10 @@ int processedJobs;
 struct ev_loop *lp;
 struct ev_async idleAgain;
 
+//Some parameters
 size_t maxMessageLength;
+double aliveMessageStart;
+double aliveMessageInter;
 
 //Block the main thread during nothing-to-be-processed
 pthread_cond_t idleC=PTHREAD_COND_INITIALIZER;

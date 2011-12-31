@@ -7,13 +7,15 @@
 \code{serve} function converts the current session into a triggr server, binding it with a callback function that will handle the incoming requests.
 }
 \usage{
-serve(callback,port=7777L,maxMessageLength=1048576L)
+serve(callback,port=7777L,
+      maxMessageLength=1048576L,aliveMessage=c(5,35))
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{callback}{Callback function. It should accept one parameter, a request as a 1-element character vector, and return a response to it either as a character vector or on output of \code{stopServer} or \code{endConnection} functions.}
   \item{port}{Port on which triggr server should listen. Will be coerced to integer.} 
   \item{maxMessageLength}{Maximal length of a single message, in characters. Trigger will allocalte at most this number of bytes, R can take extra up to this value, depending on internal hash state. Defaults to 1MB, should not exceed 1/5 of total RAM.} 
+  \item{aliveMessage}{If set to two numbers, triggr will dump short status message \code{aliveMessage[0]} seconds after start and then every \code{aliveMessage[1]} seconds. If \code{NULL}, alive message will be disabled.}
 }
 
 \details{After this function is executed, the server is initiated and the console input is blocked.
@@ -27,8 +29,6 @@ If the result of the callback is a character vector (many-element character vect
 Callback may also return a special value, obtained with either by a call to the \code{stopServer} or \code{endConnection} functions, to respectively stop the triggr server and return to interactive R session or terminate the connection with current client. Consult those functions' manual for more details.
 
 If the function throws error or returns with a different value the server will break the current connection and continue working. 
-
-Every 35 seconds the server dumps it current status and usage stats on stdout. 
 
 Triggr is non-blocking, and thus it may process one request, receive and queue many requests and send many responses simultaneously.
 }

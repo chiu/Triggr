@@ -39,7 +39,7 @@ void* trigger(void *arg){
  
  //Installing server-is-alive timer
  struct ev_timer timer;
- ev_timer_init(&timer,onTim,5.,35.);
+ ev_timer_init(&timer,onTim,aliveMessageStart,aliveMessageInter);
  ev_timer_start(lp,&timer);
 
  //Installing accept watcher

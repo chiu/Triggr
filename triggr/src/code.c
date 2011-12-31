@@ -69,13 +69,21 @@ SEXP getCID(){
 }
 
 //Function running the trigger
-SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength){
+SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SEXP AliveTimes){
  R_CStackLimit=(uintptr_t)-1;
  active=1; count=0;
  port=INTEGER(Port)[0];
  makeGlobalQueue(); 
  pthread_t thread;
  int rc;
+ 
+ if(length(AliveTimes)!=2){
+	aliveMessageStart=0;
+ }else{
+	aliveMessageStart=REAL(AliveTimes)[0];
+	aliveMessageInter=REAL(AliveTimes)[1];
+ }
+ 
  
  maxMessageLength=INTEGER(MaxMessageLength)[0];
  
@@ -87,7 +95,7 @@ SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength){
  struct sockaddr_in serverAddr;
  bzero((char*)&serverAddr,sizeof(serverAddr));
  serverAddr.sin_family=AF_INET;
- serverAddr.sin_addr.s_addr=INADDR_ANY; //Bind to localhost
+ serverAddr.sin_addr.s_addr=INADDR_ANY; //Bind to all interfaces
  serverAddr.sin_port=htons(port);
 
  if(bind(acceptFd,(struct sockaddr*)&serverAddr,sizeof(serverAddr))<0) error("Cannot bind server!");
