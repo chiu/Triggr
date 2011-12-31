@@ -14,7 +14,7 @@ serve(callback,port=7777L,
 \arguments{
   \item{callback}{Callback function. It should accept one parameter, a request as a 1-element character vector, and return a response to it either as a character vector or on output of \code{stopServer} or \code{endConnection} functions.}
   \item{port}{Port on which triggr server should listen. Will be coerced to integer.} 
-  \item{maxMessageLength}{Maximal length of a single message, in characters. Trigger will allocalte at most this number of bytes, R can take extra up to this value, depending on internal hash state. Defaults to 1MB, should not exceed 1/5 of total RAM.} 
+  \item{maxMessageLength}{Maximal length of a single incoming message, in characters. Trigger will allocate at most this number of bytes, R can take extra up to this value, depending on internal hash state. Defaults to 1MB, should not exceed 1/5 of total RAM.} 
   \item{aliveMessage}{If set to two numbers, triggr will dump short status message \code{aliveMessage[0]} seconds after start and then every \code{aliveMessage[1]} seconds. If \code{NULL}, alive message will be disabled.}
 }
 
@@ -34,10 +34,14 @@ Triggr is non-blocking, and thus it may process one request, receive and queue m
 }
 
 \note{
-In the current version, triggr does not validate whether a response is correctly formatted (i.e. does not contain \code{\\r\\n\\r\\n}s inside) -- this is intentional, because one may than consider using this feature to adapt triggr to other protocols or simply transfer raw data without any sanitizing encoding (like base64) using socket close as a communication terminator.  
+In the current version, triggr does not validate whether a response is correctly formatted (i.e. does not contain \code{\\r\\n\\r\\n}s inside) -- this is intentional, because one may than consider using this feature to adapt triggr to other protocols or simply transfer raw data without any sanitising encoding (like base64) using socket close as a communication terminator.  
 However, ensuring correct formatting is encouraged when dealing with triggr clients, which will be obviously confused by misformatted input and most probably treat this fact as a communication error.
 
-If the message exceeds \code{maxMessageLength}, connection is closed and all not-send data is lost. Running callback will continue, and its output will be ignored.
+If the message exceeds \code{maxMessageLength}, connection is closed and all not-send data is lost (this may randomly mean none or all of produced data because of the triggr's event-loop design -- thus treat exceeding this restriction like a connection fail, not a single message fail).
+Possible running callback will continue, yet its output will be ignored.
+That minimal \code{maxMessageLength} is 5, i.e. 1 character + 4, the size of \code{\r\n\r\n}.
+Note that this value has nothing to do with the size of messages generated and sent by triggr, which is arbitrary not counting memory constrain. 
+
 If the RAM is exhausted from some reason, trigger will try to survive by closing connections which are receiving at that time and not accepting new. 
 However, note that the R thread is likely to kill current computation with allocation error in such condition, and the whole process can be killed by OOM killer.
 

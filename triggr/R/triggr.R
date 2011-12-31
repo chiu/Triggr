@@ -19,10 +19,10 @@ serve<-function(callback,port=7777L,maxMessageLength=1048576L,aliveMessage=c(5,3
  stopifnot(length(maxMessageLength)==1);
  aliveMessage<-as.numeric(aliveMessage);
  if(length(aliveMessage)!=2) aliveMessage<-numeric(0);
- if(any(aliveMessage)<1) stop("Invalid alive message times!");
+ if(any(aliveMessage<1)) stop("Invalid alive message times! Both must be > 1s.");
  as.integer(port)->port; 
  as.integer(maxMessageLength)->maxMessageLength;
- if(maxMessageLength<1) stop("Invalid value of maxMessageLength!");
+ if(maxMessageLength<5) stop("Invalid value of maxMessageLength!");
  .Call(startTrigger,port,
    function(x){
     try(callback(x))->y;
