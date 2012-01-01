@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <sys/socket.h> 
 #include <netinet/in.h>
+#include <netdb.h>
 #include <sys/stat.h> 
 #include <fcntl.h>  
 #include <stdio.h>
@@ -69,11 +70,16 @@ SEXP getCID(){
 }
 
 //Function running the trigger
-SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SEXP AliveTimes){
+SEXP startTrigger(SEXP Node,SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SEXP AliveTimes){
  R_SignalHandlers=0;
  R_CStackLimit=(uintptr_t)-1;
  active=1; count=0;
- port=INTEGER(Port)[0];
+ const char *port,*node;
+ //port=INTEGER(Port)[0];
+ port=CHAR(STRING_ELT(Port,0));
+ if(Node==R_NilValue)
+	node=NULL; else node=CHAR(STRING_ELT(Node,0));
+	
  makeGlobalQueue(); 
  pthread_t thread;
  int rc;
@@ -90,7 +96,8 @@ SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SE
  inBufferInitSize=(maxMessageLength<MAX_IN_BUFFER_INIT_SIZE)?maxMessageLength:MAX_IN_BUFFER_INIT_SIZE;
  
  //Initiate network interface
- if((acceptFd=socket(AF_INET,SOCK_STREAM,0))<0) error("Cannot open listening socket!");
+ /*
+ if((acceptFd=socket(PF_INET,SOCK_STREAM,0))<0) error("Cannot open listening socket!");
 
   
  struct sockaddr_in serverAddr;
@@ -100,7 +107,45 @@ SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SE
  serverAddr.sin_port=htons(port);
 
  if(bind(acceptFd,(struct sockaddr*)&serverAddr,sizeof(serverAddr))<0) error("Cannot bind server!");
+ */
+ 
+ struct addrinfo hints,*addrInfo,*a;
+ socklen_t sinSize;
+ 
+ memset(&hints,0,sizeof(hints));
+ hints.ai_family=AF_UNSPEC; //IPv4,v6,v7... don't care
+ hints.ai_socktype=SOCK_STREAM;
+ //TODO: Give a chance to specify interface
+ if(1){
+	hints.ai_flags=AI_PASSIVE;
+ }
+ if(getaddrinfo(node,port,&hints,&addrInfo)!=0)
+	 error("Cannot obtain address to bind!");
 
+ //Trying luck binding and listening
+ int one=1;
+ for(a=addrInfo;a!=NULL;a=a->ai_next){
+	 if((acceptFd=socket(a->ai_family,a->ai_socktype,a->ai_protocol))<0){
+		 //Let's try next option
+		 continue;
+	  }
+	 if(setsockopt(acceptFd,SOL_SOCKET,SO_REUSEADDR,&one,sizeof(one))<0){
+		freeaddrinfo(addrInfo);
+		error("Socket option set failed");
+	}
+	if(bind(acceptFd,a->ai_addr,a->ai_addrlen)<0){
+		close(acceptFd);
+		//Let's try next option
+		continue;
+	}
+	//Ok, socket survived
+	break;
+ }
+ if(a==NULL){
+	 freeaddrinfo(addrInfo);
+	 error("Socket binding failed!");
+  }
+ 
  //Starting listening for clients
  if(listen(acceptFd,MAX_CLIENTS)<0) error("Cannot listen with server!");
  //Libev will be binded to this interface in the trigger thread
@@ -123,7 +168,7 @@ SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SE
  pthread_mutex_lock(&idleM); //Hold the server from true staring 
  rc=pthread_create(&thread,NULL,trigger,NULL);
  
- Rprintf("Listening on port %d.\n",port);
+ Rprintf("Listening on port %s.\n",port);
  
  //Starting process loop
  for(processedJobs=0;active;){

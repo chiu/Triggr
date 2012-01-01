@@ -68,7 +68,6 @@ struct _Connection{
 
 int working=0;
 int active=0;
-int port;
 
 int count=0;
 int clients=0;
