@@ -83,14 +83,16 @@ serve(function(x){
  close(tc);
  sub('/','',strsplit(w,' ')[[1]][2])->url;
  if(identical(url,"Q")) return(stopServer())
- N<-try(runif(as.numeric(url)));
- if(class(N)=="try-error") 
-  return(endConnection("HTTP/1.0 404 Not Found\r\n404!"));
+ N<-as.numeric(url);
+ if(any(is.na(N))) 
+  return(endConnection("HTTP/1.0 404 Not Found\r\n\r\n404!"));
  return(endConnection(
-  sprintf("HTTP/1.0 200 OK\r\n\r\nRandom numbers={\%s}",
-  paste(N,collapse=" "))))
+  sprintf("HTTP/1.0 200 OK\r\n\r\n\%d random numbers={\%s}",
+  N,paste(runif(N),collapse=" "))))
 },8080)
 }
+
+   
 
 \dontrun{
 #Simple telnet interface to R
