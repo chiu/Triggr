@@ -115,8 +115,10 @@ SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SE
  sigset_t newSet,oldSet;
  sigemptyset(&newSet); sigemptyset(&oldSet);
  sigaddset(&newSet,SIGINT);
+ sigaddset(&newSet,SIGHUP);
  sigaddset(&newSet,SIGPIPE);
  pthread_sigmask(SIG_BLOCK,&newSet,&oldSet);
+ sigEnd=0;
  
  pthread_mutex_lock(&idleM); //Hold the server from true staring 
  rc=pthread_create(&thread,NULL,trigger,NULL);
@@ -129,10 +131,21 @@ SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SE
   if(processedJobs>0) pthread_mutex_lock(&idleM);
   pthread_cond_wait(&idleC,&idleM);
   pthread_mutex_unlock(&idleM);  
-  
+    
   //There was a signal break and loop was idle
-  if(!active) break;
-       
+  if(sigEnd){
+   //Locking gqM 
+   pthread_mutex_lock(&gqM);
+   pthread_mutex_unlock(&gqM);
+   //Notifying trigger to initiate self-destruct
+   pthread_mutex_lock(&outSchedM);
+   ev_async_send(lp,&idleAgain);
+   //And wait till the idle callback ends
+   pthread_cond_wait(&outSchedC,&outSchedM);
+   pthread_mutex_unlock(&outSchedM);
+   break;
+  }
+ 
   pthread_mutex_lock(&gqM); 
   while(GlobalQueue.headWork!=NULL){
    working=1;
@@ -166,7 +179,7 @@ SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SE
     responseC=CHAR(STRING_ELT(response,0));
    }
    UNPROTECT(3);
-
+   
    //WORK DONE
    processedJobs++;
    //Locking gqM to update the global state 
@@ -181,18 +194,16 @@ SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SE
    lastOrphaned=WB->orphaned;
    killWorkBuffer(WB);
    pthread_mutex_unlock(&gqM);
-   
    //Notifying Triggr to initiate the output sending
    pthread_mutex_lock(&outSchedM);
    ev_async_send(lp,&idleAgain);
    //And wait till the idle callback ends
    pthread_cond_wait(&outSchedC,&outSchedM);
    pthread_mutex_unlock(&outSchedM);
-   
    pthread_mutex_lock(&gqM);
   }
   pthread_mutex_unlock(&gqM);
-  
+  if(sigEnd) break;
  }
  //Wait for trigger thread
  pthread_join(thread,NULL);

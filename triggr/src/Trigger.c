@@ -28,9 +28,18 @@ static void onTim(struct ev_loop *lp,ev_timer *this,int revents){
  Rprintf("Triggr is alive; %d jobs form %d clients processed, %d in processing now, %d clients connected.\n",processedJobs,clients,working,curClients);
 }
 
-static void onSigint(struct ev_loop *lp, struct ev_signal *w, int revents){
- Rprintf("Caught SIGINT, trying to exit...\n");
- ev_signal_stop(lp,w);
+ev_signal signalWatcherINT;
+ev_signal signalWatcherHUP;
+
+static void onSig(struct ev_loop *lp, struct ev_signal *w, int revents){
+ if(w->signum==SIGINT)
+  Rprintf("Caught SIGINT, trying to exit...\n");
+  else
+  Rprintf("Caught SIGHUP, exitting...\n");
+  
+ ev_signal_stop(lp,&signalWatcherHUP);
+ ev_signal_stop(lp,&signalWatcherINT);
+ sigEnd=1;
  active=0;
  pthread_mutex_lock(&idleM);
  if(!working){
@@ -39,7 +48,7 @@ static void onSigint(struct ev_loop *lp, struct ev_signal *w, int revents){
  }//Else, everything is probably screwed already since R caught SIGINT;
   //if not, everything will exit nicely after orphaned job is done.
  pthread_mutex_unlock(&idleM); 
- ev_unloop(lp,EVUNLOOP_ALL);
+ //ev_unloop(lp,EVUNLOOP_ALL);
 }
 
 void* trigger(void *arg){
@@ -56,15 +65,17 @@ void* trigger(void *arg){
  ev_timer_init(&timer,onTim,aliveMessageStart,aliveMessageInter);
  ev_timer_start(lp,&timer);
  
- //Enable siginit; by default, it has the same mask as R thread, so -SIGPIPE -SIGINT
- sigset_t onlySIGINT;
- sigemptyset(&onlySIGINT);
- sigaddset(&onlySIGINT,SIGINT);
- pthread_sigmask(SIG_UNBLOCK,&onlySIGINT,NULL);
+ //Enable siginit; by default, it has the same mask as R thread, so -SIGPIPE -SIGINT -SIGHUP
+ sigset_t triggerSet;
+ sigemptyset(&triggerSet);
+ sigaddset(&triggerSet,SIGINT);
+ sigaddset(&triggerSet,SIGHUP);
+ pthread_sigmask(SIG_UNBLOCK,&triggerSet,NULL);
  //Installing SIGINT watcher
- ev_signal signalWatcher;
- ev_signal_init(&signalWatcher,onSigint,SIGINT);
- ev_signal_start(lp,&signalWatcher);
+ ev_signal_init(&signalWatcherINT,onSig,SIGINT);
+ ev_signal_init(&signalWatcherHUP,onSig,SIGHUP);
+ ev_signal_start(lp,&signalWatcherINT);
+ ev_signal_start(lp,&signalWatcherHUP);
 
 
  //Installing accept watcher
@@ -75,6 +86,8 @@ void* trigger(void *arg){
  //Run loop
  ev_run(lp,0);
  
+ ev_signal_stop(lp,&signalWatcherHUP);
+ ev_signal_stop(lp,&signalWatcherINT);
  //Clean up; we don't need any locks since main thread is waiting for a join now
  while(GlobalQueue.headCon!=NULL) killConnection(GlobalQueue.headCon);
  ev_loop_destroy(lp);

@@ -75,6 +75,7 @@ int clients=0;
 int curClients=0;
 int curConID;
 int killConnectionAftrSend=0;
+int sigEnd;
 
 int acceptFd;
 
