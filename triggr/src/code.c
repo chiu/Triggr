@@ -126,7 +126,7 @@ SEXP startTrigger(SEXP Node,SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessag
  int one=1;
  for(a=addrInfo;a!=NULL;a=a->ai_next){
 	 if((acceptFd=socket(a->ai_family,a->ai_socktype,a->ai_protocol))<0){
-		 //Let's try new option
+		 //Let's try next option
 		 continue;
 	  }
 	 if(setsockopt(acceptFd,SOL_SOCKET,SO_REUSEADDR,&one,sizeof(one))<0){
