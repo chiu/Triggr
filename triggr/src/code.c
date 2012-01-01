@@ -70,6 +70,7 @@ SEXP getCID(){
 
 //Function running the trigger
 SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SEXP AliveTimes){
+ R_SignalHandlers=0;
  R_CStackLimit=(uintptr_t)-1;
  active=1; count=0;
  port=INTEGER(Port)[0];
@@ -88,10 +89,9 @@ SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SE
  maxMessageLength=INTEGER(MaxMessageLength)[0];
  inBufferInitSize=(maxMessageLength<MAX_IN_BUFFER_INIT_SIZE)?maxMessageLength:MAX_IN_BUFFER_INIT_SIZE;
  
- //Ignore SIGPIPE
- void *oldSigpipe=signal(SIGPIPE,sigpipeHandler);
  //Initiate network interface
  if((acceptFd=socket(AF_INET,SOCK_STREAM,0))<0) error("Cannot open listening socket!");
+
   
  struct sockaddr_in serverAddr;
  bzero((char*)&serverAddr,sizeof(serverAddr));
@@ -105,8 +105,19 @@ SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SE
  if(listen(acceptFd,MAX_CLIENTS)<0) error("Cannot listen with server!");
  //Libev will be binded to this interface in the trigger thread
  
+ //OK, network interface is up; now time to build thread structure
+ 
  active=1; 
-
+ 
+ //Signal handling
+ //Making R ignore SIGINT and SIGPIPE
+ //in fact this works only when R is idle; 
+ sigset_t newSet,oldSet;
+ sigemptyset(&newSet); sigemptyset(&oldSet);
+ sigaddset(&newSet,SIGINT);
+ sigaddset(&newSet,SIGPIPE);
+ pthread_sigmask(SIG_BLOCK,&newSet,&oldSet);
+ 
  pthread_mutex_lock(&idleM); //Hold the server from true staring 
  rc=pthread_create(&thread,NULL,trigger,NULL);
  
@@ -118,6 +129,9 @@ SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SE
   if(processedJobs>0) pthread_mutex_lock(&idleM);
   pthread_cond_wait(&idleC,&idleM);
   pthread_mutex_unlock(&idleM);  
+  
+  //There was a signal break and loop was idle
+  if(!active) break;
        
   pthread_mutex_lock(&gqM); 
   while(GlobalQueue.headWork!=NULL){
@@ -182,9 +196,10 @@ SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SE
  }
  //Wait for trigger thread
  pthread_join(thread,NULL);
- //Restore sigpipe
- signal(SIGPIPE,oldSigpipe);
+ //Restore R's default signal handling
+ pthread_sigmask(SIG_SETMASK,&oldSet,NULL);
  close(acceptFd);
- Rprintf("Clean exit of triggr. There was %d executed jobs.\n",processedJobs);
+ Rprintf("Clean exit of triggr. %d jobs were executed.\n",processedJobs);
+ R_SignalHandlers=1;
  return(R_NilValue);
 }

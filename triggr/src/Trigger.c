@@ -28,6 +28,20 @@ static void onTim(struct ev_loop *lp,ev_timer *this,int revents){
  Rprintf("Triggr is alive; %d jobs form %d clients processed, %d in processing now, %d clients connected.\n",processedJobs,clients,working,curClients);
 }
 
+static void onSigint(struct ev_loop *lp, struct ev_signal *w, int revents){
+ Rprintf("Caught SIGINT, trying to exit...\n");
+ ev_signal_stop(lp,w);
+ active=0;
+ pthread_mutex_lock(&idleM);
+ if(!working){
+   //Make R stop waiting for work and exit serve
+   pthread_cond_signal(&idleC);
+ }//Else, everything is probably screwed already since R caught SIGINT;
+  //if not, everything will exit nicely after orphaned job is done.
+ pthread_mutex_unlock(&idleM); 
+ ev_unloop(lp,EVUNLOOP_ALL);
+}
+
 void* trigger(void *arg){
  lp=ev_loop_new(EVFLAG_AUTO);
  ev_async_init(&idleAgain,cbIdleAgain);
@@ -38,9 +52,20 @@ void* trigger(void *arg){
  pthread_mutex_unlock(&idleM); 
  
  //Installing server-is-alive timer
- struct ev_timer timer;
+ ev_timer timer;
  ev_timer_init(&timer,onTim,aliveMessageStart,aliveMessageInter);
  ev_timer_start(lp,&timer);
+ 
+ //Enable siginit; by default, it has the same mask as R thread, so -SIGPIPE -SIGINT
+ sigset_t onlySIGINT;
+ sigemptyset(&onlySIGINT);
+ sigaddset(&onlySIGINT,SIGINT);
+ pthread_sigmask(SIG_UNBLOCK,&onlySIGINT,NULL);
+ //Installing SIGINT watcher
+ ev_signal signalWatcher;
+ ev_signal_init(&signalWatcher,onSigint,SIGINT);
+ ev_signal_start(lp,&signalWatcher);
+
 
  //Installing accept watcher
  ev_io acceptWatcher;
@@ -49,7 +74,7 @@ void* trigger(void *arg){
 
  //Run loop
  ev_run(lp,0);
-
+ 
  //Clean up; we don't need any locks since main thread is waiting for a join now
  while(GlobalQueue.headCon!=NULL) killConnection(GlobalQueue.headCon);
  ev_loop_destroy(lp);
