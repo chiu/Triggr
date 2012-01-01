@@ -1,6 +1,6 @@
 /* Controller of the R session + additional C chunks
 
-   Copyright (c)2011 Miron Bartosz Kursa
+   Copyright (c)2011,2012 Miron Bartosz Kursa
  
    This file is part of triggr R package.
 
