@@ -36,19 +36,19 @@ static void onSig(struct ev_loop *lp, struct ev_signal *w, int revents){
   Rprintf("Caught SIGINT, trying to exit...\n");
   else
   Rprintf("Caught SIGHUP, exitting...\n");
-  
+ //Don't read any more signals 
  ev_signal_stop(lp,&signalWatcherHUP);
  ev_signal_stop(lp,&signalWatcherINT);
+ //Set flags
  sigEnd=1;
  active=0;
  pthread_mutex_lock(&idleM);
  if(!working){
    //Make R stop waiting for work and exit serve
    pthread_cond_signal(&idleC);
- }//Else, everything is probably screwed already since R caught SIGINT;
-  //if not, everything will exit nicely after orphaned job is done.
+ }//Else, in case of SIGINT everything is probably already screwed by R
+  //      in case of SIGHUP server will terminate after finishing current job due to set flags
  pthread_mutex_unlock(&idleM); 
- //ev_unloop(lp,EVUNLOOP_ALL);
 }
 
 void* trigger(void *arg){
