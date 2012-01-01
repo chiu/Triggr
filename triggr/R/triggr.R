@@ -13,17 +13,18 @@ getConID<-function(){
  .Call(getCID);
 }
 
-serve<-function(callback,port=7777L,maxMessageLength=1048576L,aliveMessage=c(5,35)){
+serve<-function(callback,port="7777",node=NULL,maxMessageLength=1048576L,aliveMessage=c(5,35)){
  stopifnot(is.function(callback));
  stopifnot(length(port)==1);
  stopifnot(length(maxMessageLength)==1);
  aliveMessage<-as.numeric(aliveMessage);
  if(length(aliveMessage)!=2) aliveMessage<-numeric(0);
  if(any(aliveMessage<1)) stop("Invalid alive message times! Both must be > 1s.");
- as.integer(port)->port; 
+ as.character(port)->port; 
+ if(!is.null(node)) interface<-as.character(node);
  as.integer(maxMessageLength)->maxMessageLength;
  if(maxMessageLength<5) stop("Invalid value of maxMessageLength!");
- .Call(startTrigger,port,
+ .Call(startTrigger,node,port,
    function(x){
     try(callback(x))->y;
     if(is.integer(y)) return(y);

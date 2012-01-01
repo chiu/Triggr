@@ -7,13 +7,14 @@
 \code{serve} function converts the current session into a triggr server, binding it with a callback function that will handle the incoming requests.
 }
 \usage{
-serve(callback,port=7777L,
+serve(callback,port="7777",node=NULL,
       maxMessageLength=1048576L,aliveMessage=c(5,35))
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{callback}{Callback function. It should accept one parameter, a request as a 1-element character vector, and return a response to it either as a character vector or on output of \code{stopServer} or \code{endConnection} functions.}
-  \item{port}{Port on which triggr server should listen. Will be coerced to integer.} 
+  \item{port}{Port on which triggr server should listen. Will be coerced to character, so can be either an integer \code{80}, string with decimal number \code{"80"} or a service name \code{"http"}.} 
+  \item{node}{IP or address on which triggr should listen.}
   \item{maxMessageLength}{Maximal length of a single incoming message, in characters. Trigger will allocate at most this number of bytes, R can take extra up to this value, depending on internal hash state. Defaults to 1MB, should not exceed 1/5 of total RAM.} 
   \item{aliveMessage}{If set to two numbers, triggr will dump short status message \code{aliveMessage[0]} seconds after start and then every \code{aliveMessage[1]} seconds. If \code{NULL}, alive message will be disabled.}
 }
