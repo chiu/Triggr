@@ -12,7 +12,7 @@ Triggr allows to use R by network via simple and light RPC protocol. It queues r
 \tabular{ll}{
 Package: \tab triggr\cr
 Type: \tab Package\cr
-Version: \tab 0.1\cr
+Version: \tab 0.2.99\cr
 Date: \tab 2010-05-21\cr
 License: \tab LICENCE\cr
 LazyLoad: \tab yes\cr

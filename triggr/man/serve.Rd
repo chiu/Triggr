@@ -47,6 +47,10 @@ However, note that the R thread is likely to kill current computation with alloc
 
 The result of R crash during callback function are undefined; probably the server will also crash, but in very rare cases the server will continue to accept and queue requests till the memory will be exhausted. 
 
+One can shut down the server by sending SIGHUP to the R process; if there is no message in processing at that time, R will return to REPL state immediately, otherwise it will wait for it to be finished before returning. 
+SIGINT (also generated via ctrl-C) will work in the same manner, yet, due to R interpreter construction, the results of receiving this signal during message processing are undefined -- most likely the whole process will terminate, though it may also stuck in some esoteric state. 
+Therefore the use of this signal is strongly discouraged. 
+
 There are no time-outs defined. This allows a client to COMET-like wait for even a very long computation but obviously creates a risk of orphaned connections.
 }
 
