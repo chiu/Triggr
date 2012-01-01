@@ -16,13 +16,5 @@ General idea, use-cased:
   - Error in callback will result in (? sending pre-defined response to the client -- currently not in plans; may be emulated by `try()` in callback) and breaking connection.
 7. Once started, Trigger will break only on callback returning terminate request.
 
-This software is usable, but is still in development. Plans (in order of importance):
+This software is quite usable, but is still in development. For plans and progress, see [Issues](https://github.com/mbq/Triggr/issues).
 
-7. better control of triggr output (i.e. ablity to remove alive-message)
-7. controllable limit of message size
-7. signal server termination
-7. onConnect/onDisconnect callbacks
-7. time-outs, fully controllable by callbacks
-7. endConnection available in onConnect
-7. possibility to daemonize triggr-controlled R process 
-7. arbitrary message terminator / header support to make triggr a general server framework (possibly a new package)

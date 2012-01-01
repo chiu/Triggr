@@ -1,6 +1,6 @@
 /* Connection object implementation, IO callbacks
 
-   Copyright (c)2011 Miron Bartosz Kursa
+   Copyright (c)2011,2012 Miron Bartosz Kursa
  
    This file is part of triggr R package.
 
@@ -18,7 +18,7 @@ inline void rolloutWorkBuffers(Connection* c){
 }
 
 
-inline void killConnection(Connection *c){
+void killConnection(Connection *c){
  //Killing connection removes all its outBuffers (even uncompleted, but those have no place to be transfered now)
  rolloutOutBuffers(c);
  //...and WorkBuffers; if one of them is the work currently done, it stays in memory with connection set to NULL yet removed from connection's work queue
@@ -37,7 +37,6 @@ inline void killConnection(Connection *c){
 }
 
 void tryResolveConnection(Connection* c){
- 
  //Try to close and destroy connection if it is not needed
  if(c->headWork==NULL){
   //Ok, nothing is here to compute 
@@ -51,12 +50,10 @@ void tryResolveConnection(Connection* c){
   }else{
    //In theory we have something to send; but can we?
    if(!c->canWrite){
-    //printf("Some-writes-lost exit of connection #%d\n",c->ID);
     killConnection(c);
    } //else we still can write, so nothing is needed
   }
  }else{
-  //printf("Still work to do... Can't stop without it\n");
   if(!c->canWrite){
    //We have work, but we can't write -- connection killed, output orphaned
    ev_io_stop(lp,&c->aWatch);
@@ -71,7 +68,7 @@ void tryResolveConnection(Connection* c){
 
 //This function copies its Null-terminated string what argument, so the
 // original should be somehow removed manually.
-void scheduleWork(const char *what,Connection* c){
+int scheduleWork(const char *what,Connection* c){
  size_t size=strlen(what);
  WorkBuffer* WB=malloc(sizeof(WorkBuffer));
  if(WB){
@@ -115,9 +112,12 @@ void scheduleWork(const char *what,Connection* c){
     pthread_cond_signal(&idleC);
    }//Else, this work will be fired on finishing currently done work
    pthread_mutex_unlock(&idleM); 
-  }//Else scheduling just failed because of OOM
- }//Else ditto
-    //TODO: Two above should kill the connection.
+  }else goto OOM;
+ }else goto OOM;
+ return(1);
+ OOM: 
+ killConnection(c);
+ return(0);
 }
 
 static void cbRead(struct ev_loop *lp,struct ev_io *this,int revents){
@@ -125,9 +125,10 @@ static void cbRead(struct ev_loop *lp,struct ev_io *this,int revents){
  c=this->data;
  tillRNRN(this->fd,&(c->IB));
  if(c->IB.state==1){
-  scheduleWork(c->IB.buffer,c);
-  freeIB(&c->IB);
-  makeIB(&c->IB);
+  if(scheduleWork(c->IB.buffer,c)){
+	freeIB(&c->IB);
+	makeIB(&c->IB);
+  } //Else connection is already killed
   return;
  }
  if(c->IB.state==2){
