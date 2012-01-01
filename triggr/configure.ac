@@ -33,7 +33,7 @@ CC="$PTHREAD_CC"
 AC_CHECK_LIB([ev],[ev_run],,AC_MSG_ERROR([Cannot find libev! Please install.]))
 
 # Checks for header files.
-AC_CHECK_HEADERS([fcntl.h netinet/in.h stdlib.h string.h sys/socket.h unistd.h errno.h])
+AC_CHECK_HEADERS([fcntl.h netinet/in.h netdb.h stdlib.h string.h sys/socket.h unistd.h errno.h])
 AC_CHECK_HEADER([ev.h],,AC_MSG_ERROR([Cannot find libev! Please install.]))
 
 AC_CONFIG_FILES([src/Makevars])
