@@ -136,6 +136,7 @@ SEXP startTrigger(SEXP Port,SEXP WrappedCall,SEXP Envir,SEXP MaxMessageLength,SE
   if(sigEnd){
    //Locking gqM 
    pthread_mutex_lock(&gqM);
+   lastResult=NULL;
    pthread_mutex_unlock(&gqM);
    //Notifying trigger to initiate self-destruct
    pthread_mutex_lock(&outSchedM);
