@@ -46,16 +46,12 @@ OutBuffer *makeOutputBuffer(const char *what,Connection *c,int killAfter){
    return(OB);
   }else{
    //OOM
-   Rprintf("Out of memory when allocating OutBuffer (A)!\n");
-   c->canWrite=0;
-   tryResolveConnection(c);
+   killConnection(c);
    return(NULL);
   }
  }else{
   //OOM
-  Rprintf("Out of memory when allocating OutBuffer (B)!\n");
-  c->canWrite=0;
-  tryResolveConnection(c);
+  killConnection(c);
   return(NULL);
  }
 }

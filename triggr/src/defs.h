@@ -115,6 +115,7 @@ struct{
  int curCon;
 } GlobalQueue;
 
+void killConnection(Connection *c);
 void tryResolveConnection(Connection* c);
 
 
