@@ -8,5 +8,6 @@ Author: Miron B. Kursa
 Maintainer: Miron B. Kursa <M.Kursa@icm.edu.pl>
 Description: Triggr launches a server that gathers RNRN-terminated text messages, executes arbitrary R function on them and sends back the results in the same format. Communication is event-based and delegated to a septate thread making triggr an efficient solution for high-load tasks.
 URL: https://github.com/mbq/Triggr
+SystemRequirements: libev (>=3.9)
 License: GPL 2
 LazyLoad: yes

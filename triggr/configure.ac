@@ -1,6 +1,3 @@
-#                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
-
 AC_PREREQ([2.68])
 AC_INIT([triggr],[0.3],[M.Kursa@icm.edu.pl])
 m4_include([ax_pthread.m4])
@@ -21,21 +18,45 @@ AC_SUBST(R_HOME)
 AC_PROG_CC
 
 
-# Checks for libraries.
-
+# Checks for libraries
+# pthreads
 AX_PTHREAD(,[AC_MSG_ERROR([Cannot use pthreads.])])
-
 LIBS="$PTHREAD_LIBS $LIBS"
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 CC="$PTHREAD_CC"
 
 
-AC_CHECK_LIB([ev],[ev_run],,AC_MSG_ERROR([Cannot find libev! Please install.]))
+# libev
+LIBEV_CFLAGS=""
+LIBEV_LIBS=""
 
-# Checks for header files.
+AC_CHECK_HEADERS([ev.h],[
+	AC_CHECK_LIB([ev],[ev_time],[
+		LIBEV_IN="<ev.h>"
+		LIBEV_CFLAGS=""
+		LIBEV_LIBS="-lev"
+	],[
+		AC_MSG_ERROR([libev headers found, but the library is not usable!])
+	])
+],[
+		LIBEV_IN="<libev/ev.h>"
+		AC_CHECK_HEADERS([libev/ev.h],[
+			AC_CHECK_LIB([ev], [ev_time], [
+				LIBEV_CFLAGS=""
+				LIBEV_LIBS="-lev"
+			],[
+				AC_MSG_ERROR([libev not found!])
+			])
+		],[])
+])
+
+AC_SUBST(LIBEV_IN)
+LIBS="$LIBEV_LIBS $LIBS"
+CFLAGS="$CFLAGS $LIBEV_CFLAGS"
+
+#Checks for header files.
 AC_CHECK_HEADERS([fcntl.h netinet/in.h netdb.h stdlib.h string.h sys/socket.h unistd.h errno.h])
-AC_CHECK_HEADER([ev.h],,AC_MSG_ERROR([Cannot find libev! Please install.]))
 
-AC_CONFIG_FILES([src/Makevars])
+AC_CONFIG_FILES([src/Makevars src/libev.h])
 AC_OUTPUT
 

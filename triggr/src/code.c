@@ -23,7 +23,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h> 
-#include <ev.h>
+
+#include "libev.h"
+/*#include <libev/ev.h>
+
+#if EV_VERSION_MAJOR<4
+	#define ev_run ev_loop
+	#define ev_break ev_unloop
+	#define EV_TIMER EV_TIMEOUT
+	#define EVBREAK_ONE EVUNLOOP_ONE
+#endif*/
+
 #include <errno.h>
 
 #define HAVE_UINTPTR_T 7
@@ -45,6 +55,7 @@
 #include "Connection.c"
 //Trigger thread
 #include "Trigger.c"
+
 
 void makeGlobalQueue(){
  pthread_mutex_lock(&gqM);
