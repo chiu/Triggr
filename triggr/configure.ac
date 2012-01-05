@@ -55,7 +55,7 @@ LIBS="$LIBEV_LIBS $LIBS"
 CFLAGS="$CFLAGS $LIBEV_CFLAGS"
 
 #Checks for header files.
-AC_CHECK_HEADERS([fcntl.h netinet/in.h netdb.h stdlib.h string.h sys/socket.h unistd.h errno.h])
+AC_CHECK_HEADERS([fcntl.h netinet/in.h netdb.h stdlib.h  sys/socket.h unistd.h errno.h])
 
 AC_CONFIG_FILES([src/Makevars src/libev.h])
 AC_OUTPUT
