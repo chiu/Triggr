@@ -30,6 +30,7 @@ CC="$PTHREAD_CC"
 LIBEV_CFLAGS=""
 LIBEV_LIBS=""
 
+
 AC_CHECK_HEADERS([ev.h],[
 	AC_CHECK_LIB([ev],[ev_time],[
 		LIBEV_IN="<ev.h>"
@@ -45,9 +46,11 @@ AC_CHECK_HEADERS([ev.h],[
 				LIBEV_CFLAGS=""
 				LIBEV_LIBS="-lev"
 			],[
-				AC_MSG_ERROR([libev not found!])
+				AC_MSG_ERROR([older-style libev headers found, but the library is not usable!])
 			])
-		],[])
+		],[
+			AC_MSG_ERROR([libev not found! Please install, or set ])
+		])
 ])
 
 AC_SUBST(LIBEV_IN)
