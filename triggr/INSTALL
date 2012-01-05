@@ -1,0 +1,21 @@
+Triggr requires libev library in a version 3.0 or later; version 4.x is
+strongly suggested. libev is a free software available from:
+ http://software.schmorp.de/pkg/libev.html
+
+You probably don't have it installed, but it is present in most Linux 
+distributions' repositories, in particular:
+- Fedora, CentOS, RHEL, SUSE: libev-devel
+- Debian, Ubuntu, Mint: libev-dev
+- Arch, Gentoo: libev
+
+Triggr also utilises POSIX Threads (pthreads), which must be supported by the
+OS and compiler; your system most likely supports it already. 
+
+Both dependencies should be checked and resolved by the configure script invoked
+by package installation. If not, please contact the author.
+
+Triggr 0.3 is not supporting Windows and a port is not currently planned.
+The support for non-Linux *NIXes (including OS X) is theoretical, i.e. triggr is
+not tested on those platforms, and while it relies heavily on specialised kernel
+features the chance of some unexpected problems is significant.
+

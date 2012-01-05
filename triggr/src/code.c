@@ -25,14 +25,6 @@
 #include <assert.h> 
 
 #include "libev.h"
-/*#include <libev/ev.h>
-
-#if EV_VERSION_MAJOR<4
-	#define ev_run ev_loop
-	#define ev_break ev_unloop
-	#define EV_TIMER EV_TIMEOUT
-	#define EVBREAK_ONE EVUNLOOP_ONE
-#endif*/
 
 #include <errno.h>
 
