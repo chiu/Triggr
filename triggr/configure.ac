@@ -14,6 +14,7 @@ AC_MSG_RESULT([yes])
 RBIN="${R_HOME}/bin/R"
 CC=`"${RBIN}" CMD config CC`;
 CFLAGS=`"${RBIN}" CMD config CFLAGS`
+CPPFLAGS=`"${RBIN}" CMD config CPPFLAGS`
 AC_SUBST(R_HOME)
 AC_PROG_CC
 

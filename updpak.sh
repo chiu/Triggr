@@ -16,7 +16,7 @@ cp -r triggr/man/*.Rd cleanPkg/triggr/man/.
 cp -r triggr/R/*.R cleanPkg/triggr/R/.
 cp -r triggr/src/*.c cleanPkg/triggr/src/.
 cp -r triggr/src/*.h cleanPkg/triggr/src/.
-rm cleanPkg/triggr/src/libev.h
+rm -f cleanPkg/triggr/src/libev.h
 cp -r triggr/src/*.in cleanPkg/triggr/src/.
 
 cp triggr/DESCRIPTION cleanPkg/triggr/.
