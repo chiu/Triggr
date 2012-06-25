@@ -44,6 +44,10 @@
 //Trigger thread
 #include "Trigger.c"
 
+//This is a side code of R object encoder, not required by the rest
+// of the C code
+#include "rawpack.c"
+
 
 void makeGlobalQueue(){
  pthread_mutex_lock(&gqM);

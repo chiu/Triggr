@@ -3,5 +3,6 @@ export(serve)
 export(endConnection)
 export(stopServer)
 
-useDynLib(triggr,getCID,startTrigger)
+export(packRaw,unpackRaw,encodeObject,decodeObject)
 
+useDynLib(triggr,getCID,startTrigger, stringizeRaw,rawizeString)
