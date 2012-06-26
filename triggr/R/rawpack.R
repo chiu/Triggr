@@ -14,9 +14,5 @@ encodeObject<-function(x){
  ans
 }
 
-decodeObject<-function(cx){
- rc<-rawConnection(unpackRaw(cx),'rb')
- ans<-unserialize(rc)
- close(rc)
- ans
-}
+decodeObject<-function(cx)
+ unserialize(unpackRaw(cx))
